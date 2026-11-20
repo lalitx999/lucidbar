@@ -39,3 +39,13 @@ def test_portal_shows_current_seal(client, make_member):
 
     assert "Bronze Seal" in html
     assert reverse("payments:choose_seal") in html
+
+
+def test_bronze_grant_credits_welcome_keys(make_member):
+    from apps.keys.selectors import keys_selector
+
+    member = make_member()
+    membership_service.grant_signup_membership(member)
+    membership_service.grant_signup_membership(member)
+
+    assert keys_selector.balance_of(member) == 2  # once, not twice

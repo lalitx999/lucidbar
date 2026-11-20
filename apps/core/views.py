@@ -5,8 +5,10 @@ from django.templatetags.static import static
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_safe
 
+from apps.keys.selectors import keys_selector
 from apps.memberships.selectors import membership_selector
 from apps.payments.selectors import payment_selector
+from apps.treasures.selectors import treasure_selector
 
 from .decorators import member_required
 
@@ -24,13 +26,15 @@ def welcome(request):
 @require_safe
 def portal(request):
     """
-    Member home. Keys balance, featured treasure and the Reveal status are
-    added here as their apps arrive (Phases 3-4).
+    Member home: keys balance, seal, featured treasure. The Reveal status
+    is added in Phase 4.
     """
     context = {
         "active_tab": "portal",
         "membership": membership_selector.current_membership(request.user),
         "open_intent": payment_selector.open_intent(request.user),
+        "balance": keys_selector.balance_of(request.user),
+        "featured": treasure_selector.featured(),
     }
     return render(request, "portal/home.html", context)
 

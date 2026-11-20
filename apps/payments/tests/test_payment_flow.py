@@ -281,3 +281,13 @@ def test_renewal_extends_from_current_end(member, gold):
     m2 = membership_service.grant_paid_membership(member, gold, second)
 
     assert m2.starts_at == m1.ends_at
+
+
+def test_approved_gold_credits_ten_keys(client, member, slip_file):
+    from apps.keys.selectors import keys_selector
+
+    intent = checkout(client)
+    with mock.patch(VERIFY, return_value=easyslip_ok()), mock.patch("apps.notifications.tasks.telegram"):
+        upload(client, intent, slip_file())
+
+    assert keys_selector.balance_of(member) == 10

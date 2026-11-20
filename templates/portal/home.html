@@ -10,14 +10,14 @@
     <h1 class="font-display fw-semibold text-uppercase tracking-wide fs-5 mt-2 mb-0">{{ request.user.get_short_name }}</h1>
   </div>
 
-  <div class="lucid-card has-halo d-flex align-items-center gap-3">
+  <a href="{% url 'keys:keys' %}" class="lucid-card has-halo d-flex align-items-center gap-3 text-decoration-none">
     <span class="emblem emblem-sm">{% icon "key" "icon-lg" %}</span>
     <div class="flex-grow-1">
       <div class="eyebrow text-muted-lucid">{% translate "Sanctum keys" %}</div>
-      <div class="font-display fs-3 text-gold text-glow">0</div>
+      <div class="font-display fs-3 text-gold text-glow">{{ balance }}</div>
     </div>
-    <span class="micro text-faint text-end">{% translate "Coming soon" %}</span>
-  </div>
+    {% icon "arrow-right" "icon-sm text-gold" %}
+  </a>
 
   <div class="lucid-card seal-card{% if membership %} seal-{{ membership.tier.code }}{% endif %}">
     <div class="d-flex justify-content-between align-items-start gap-3">
@@ -42,5 +42,16 @@
       </a>
     {% endif %}
   </div>
+
+  {% if featured %}
+  <a href="{% url 'treasures:detail' featured.pk %}" class="lucid-card featured-treasure text-decoration-none">
+    <span class="eyebrow text-gold">{% translate "Featured treasure" %}</span>
+    <div class="d-flex align-items-center gap-3 mt-2">
+      <span class="emblem emblem-sm">{% icon "gift" "icon-lg" %}</span>
+      <div class="flex-grow-1 font-display text-uppercase tracking-wide text-white">{{ featured.name }}</div>
+      <div class="treasure-cost">{% icon "key" "icon-xs" %}<span>{{ featured.keys_cost }}</span></div>
+    </div>
+  </a>
+  {% endif %}
 </section>
 {% endblock %}

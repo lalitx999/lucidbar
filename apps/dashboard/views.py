@@ -1,6 +1,6 @@
 """
 Custom staff dashboard (not Django Admin). Every view is guarded by
-@staff_required. Phase 2 covers payment review; more sections follow.
+@staff_required. Sections: payment review, treasure hand-over.
 """
 
 from django.contrib import messages
@@ -14,6 +14,8 @@ from apps.core.decorators import staff_required
 from apps.payments.forms import StaffApproveForm, StaffRejectForm
 from apps.payments.selectors import payment_selector
 from apps.payments.services import payment_service
+from apps.treasures.selectors import treasure_selector
+from apps.treasures.services import redemption_service
 
 
 @never_cache
@@ -92,3 +94,50 @@ def slip_image(request, slip_id):
     response["Cache-Control"] = "private, no-store"
     response["X-Content-Type-Options"] = "nosniff"
     return response
+
+
+# ---------------------------------------------------------------------------
+# Treasure hand-over
+# ---------------------------------------------------------------------------
+@never_cache
+@staff_required
+@require_safe
+def redemptions(request):
+    query = request.GET.get("q", "")
+    context = {
+        "query": query,
+        "ready": treasure_selector.ready_redemptions(query),
+        "recent": treasure_selector.recent_handled(),
+        "section": "redemptions",
+    }
+    return render(request, "dashboard/redemptions.html", context)
+
+
+@staff_required
+@require_POST
+def redemption_hand_over(request, redemption_id):
+    redemption = treasure_selector.redemption_or_404(redemption_id)
+    try:
+        redemption_service.hand_over(redemption, request.user)
+    except redemption_service.RedemptionError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(
+            request,
+            _("%(item)s handed over to %(name)s.")
+            % {"item": redemption.treasure.name, "name": redemption.member.full_name},
+        )
+    return redirect("dashboard:redemptions")
+
+
+@staff_required
+@require_POST
+def redemption_cancel(request, redemption_id):
+    redemption = treasure_selector.redemption_or_404(redemption_id)
+    try:
+        redemption_service.cancel(redemption, request.user)
+    except redemption_service.RedemptionError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(request, _("Cancelled and %(keys)d keys refunded.") % {"keys": redemption.keys_spent})
+    return redirect("dashboard:redemptions")

@@ -1,0 +1,17 @@
+{% load i18n icons %}
+{% comment %} One treasure tile. Expects `treasure` and `balance`. {% endcomment %}
+<a href="{% url 'treasures:detail' treasure.pk %}" class="treasure-card{% if not treasure.in_stock %} is-sold-out{% endif %}">
+  <div class="treasure-media">
+    {% if treasure.image %}
+      <img src="{{ treasure.image.url }}" alt="" loading="lazy">
+    {% else %}
+      {% icon "gift" "icon-xl" %}
+    {% endif %}
+  </div>
+  <div class="treasure-body">
+    <div class="micro text-muted-lucid">{{ treasure.get_category_display }}</div>
+    <div class="treasure-name">{{ treasure.name }}</div>
+    <div class="treasure-cost">{% icon "key" "icon-xs" %}<span>{{ treasure.keys_cost }}</span></div>
+    {% if not treasure.in_stock %}<div class="micro text-faint">{% translate "Out of stock" %}</div>{% endif %}
+  </div>
+</a>

@@ -1,0 +1,42 @@
+{% extends "layouts/portal.html" %}
+{% load i18n icons %}
+
+{% block title %}{{ treasure.name }} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="d-flex flex-column gap-4 fade-in">
+  <a href="{% url 'treasures:catalog' %}" class="btn-link-gold text-muted-lucid justify-content-start">{% icon "arrow-left" "icon-xs" %}<span>{% translate "All treasures" %}</span></a>
+
+  <div class="lucid-card has-halo d-flex flex-column gap-3">
+    <div class="treasure-media treasure-media-lg">
+      {% if treasure.image %}<img src="{{ treasure.image.url }}" alt="">{% else %}{% icon "gift" "icon-xl" %}{% endif %}
+    </div>
+    <div>
+      <div class="micro text-muted-lucid">{{ treasure.get_category_display }}</div>
+      <h1 class="font-display fw-semibold text-uppercase tracking-wide fs-5 mt-1 mb-2">{{ treasure.name }}</h1>
+      {% if treasure.description %}<p class="small text-muted-lucid mb-0">{{ treasure.description|linebreaksbr }}</p>{% endif %}
+    </div>
+
+    <dl class="identity-facts mb-0">
+      <div><dt>{% translate "Cost" %}</dt><dd class="text-gold">{% blocktranslate count keys=treasure.keys_cost %}{{ keys }} key{% plural %}{{ keys }} keys{% endblocktranslate %}</dd></div>
+      <div><dt>{% translate "Your balance" %}</dt><dd>{{ balance }}</dd></div>
+      {% if treasure.stock is not None %}<div><dt>{% translate "Remaining" %}</dt><dd>{{ treasure.stock }}</dd></div>{% endif %}
+    </dl>
+
+    {% if not treasure.in_stock %}
+      <p class="small text-faint mb-0">{% translate "This treasure is out of stock." %}</p>
+    {% elif balance < treasure.keys_cost %}
+      <p class="small text-faint mb-0">{% blocktranslate count need=missing %}You need {{ need }} more key to unlock this treasure.{% plural %}You need {{ need }} more keys to unlock this treasure.{% endblocktranslate %}</p>
+      <a href="{% url 'payments:choose_seal' %}" class="btn btn-outline-gold">{% translate "Get more keys with a seal" %}</a>
+    {% else %}
+      <form method="post" action="{% url 'treasures:unlock' treasure.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-lucid">
+          <span>{% blocktranslate count keys=treasure.keys_cost %}Unlock for {{ keys }} key{% plural %}Unlock for {{ keys }} keys{% endblocktranslate %}</span>
+          {% icon "key" "icon-sm" %}
+        </button>
+      </form>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

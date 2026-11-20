@@ -1,0 +1,72 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Treasure hand-over" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3 mb-3">
+  <h1 class="font-display fs-4 text-uppercase tracking-wide mb-0">{% translate "Treasures to hand over" %}</h1>
+  <form method="get" class="d-flex gap-2" role="search">
+    <input type="search" name="q" value="{{ query }}" class="form-control lucid-input" placeholder="{% translate 'Claim code, name or email' %}" aria-label="{% translate 'Search' %}" autofocus>
+    <button type="submit" class="btn btn-outline-gold">{% translate "Search" %}</button>
+  </form>
+</div>
+
+{% if ready %}
+<div class="table-responsive">
+  <table class="table dash-table align-middle">
+    <thead>
+      <tr><th>{% translate "Code" %}</th><th>{% translate "Member" %}</th><th>{% translate "Treasure" %}</th><th class="text-end">{% translate "Keys" %}</th><th>{% translate "Unlocked" %}</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for r in ready %}
+      <tr>
+        <td><span class="claim-code">{{ r.claim_code }}</span></td>
+        <td>{{ r.member.full_name }}<div class="small text-muted-lucid">@{{ r.member.handle }}</div></td>
+        <td>{{ r.treasure.name }}</td>
+        <td class="text-end">{{ r.keys_spent }}</td>
+        <td>{{ r.created_at|timesince }}</td>
+        <td class="text-end">
+          <div class="d-flex gap-2 justify-content-end">
+            <form method="post" action="{% url 'dashboard:redemption_hand_over' r.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-gold">{% translate "Hand over" %}</button>
+            </form>
+            <form method="post" action="{% url 'dashboard:redemption_cancel' r.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-muted">{% translate "Cancel and refund" %}</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted-lucid">{% if query %}{% translate "No matching treasures waiting." %}{% else %}{% translate "Nothing waiting to be handed over." %}{% endif %}</p>
+{% endif %}
+
+<h2 class="font-display fs-6 text-uppercase tracking-wide mt-5 mb-3">{% translate "Recently handled" %}</h2>
+{% if recent %}
+<div class="table-responsive">
+  <table class="table dash-table align-middle">
+    <thead><tr><th>{% translate "Code" %}</th><th>{% translate "Member" %}</th><th>{% translate "Treasure" %}</th><th>{% translate "Status" %}</th><th>{% translate "By" %}</th><th>{% translate "When" %}</th></tr></thead>
+    <tbody>
+      {% for r in recent %}
+      <tr>
+        <td class="font-monospace">{{ r.claim_code }}</td>
+        <td>{{ r.member.full_name }}</td>
+        <td>{{ r.treasure.name }}</td>
+        <td>{{ r.get_status_display }}</td>
+        <td>{{ r.handled_by.full_name|default:"-" }}</td>
+        <td>{{ r.handled_at|date:"j M Y H:i" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted-lucid">{% translate "Nothing yet." %}</p>
+{% endif %}
+{% endblock %}

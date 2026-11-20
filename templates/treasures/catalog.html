@@ -1,0 +1,60 @@
+{% extends "layouts/portal.html" %}
+{% load i18n icons %}
+
+{% block title %}{% translate "Treasures" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="d-flex flex-column gap-4 fade-in">
+  <div class="d-flex justify-content-between align-items-end">
+    <div>
+      <span class="eyebrow text-gold">{% translate "Sanctum vault" %}</span>
+      <h1 class="font-display fw-semibold text-uppercase tracking-wide fs-5 mt-1 mb-0">{% translate "Treasures" %}</h1>
+    </div>
+    <a href="{% url 'keys:keys' %}" class="treasure-cost text-decoration-none">{% icon "key" "icon-sm" %}<span>{{ balance }}</span></a>
+  </div>
+
+  {% if featured %}
+  <a href="{% url 'treasures:detail' featured.pk %}" class="lucid-card has-halo featured-treasure text-decoration-none">
+    <span class="eyebrow text-gold">{% translate "Featured" %}</span>
+    <div class="d-flex align-items-center gap-3 mt-2">
+      <span class="emblem emblem-sm">{% icon "star" "icon-lg" %}</span>
+      <div class="flex-grow-1">
+        <div class="font-display text-uppercase tracking-wide text-white">{{ featured.name }}</div>
+        <div class="small text-muted-lucid">{{ featured.description|truncatechars:80 }}</div>
+      </div>
+      <div class="treasure-cost">{% icon "key" "icon-xs" %}<span>{{ featured.keys_cost }}</span></div>
+    </div>
+  </a>
+  {% endif %}
+
+  {% if treasures %}
+  <div class="treasure-grid">
+    {% for treasure in treasures %}
+      {% include "treasures/_card.html" %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-muted-lucid small">{% translate "The vault is being prepared. Check back soon." %}</p>
+  {% endif %}
+
+  {% if redemptions %}
+  <div class="lucid-card">
+    <div class="eyebrow text-gold mb-2">{% translate "My treasures" %}</div>
+    <ul class="ledger-list">
+      {% for r in redemptions %}
+      <li>
+        <div>
+          <div class="ledger-reason">{{ r.treasure.name }}</div>
+          <div class="ledger-meta">{{ r.created_at|date:"j M Y" }} &middot; {{ r.get_status_display }}</div>
+        </div>
+        {% if r.status == "ready" %}
+        <div class="claim-code" aria-label="{% translate 'Claim code' %}">{{ r.claim_code }}</div>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="small text-faint mt-2 mb-0">{% translate "Show the claim code to our staff to collect your treasure." %}</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

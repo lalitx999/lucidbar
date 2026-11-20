@@ -1,9 +1,12 @@
-"""Granting memberships. Keys for each grant are credited in Phase 3."""
+"""Granting memberships. Each grant credits the tier's keys in the same transaction."""
 
 from datetime import timedelta
 
 from django.db import transaction
 from django.utils import timezone
+
+from apps.keys.models import KeysEntry
+from apps.keys.services import ledger_service
 
 from ..models import Membership, SealTier
 from ..selectors import membership_selector
@@ -20,11 +23,14 @@ def grant_signup_membership(member) -> Membership | None:
     existing = Membership.objects.filter(member=member, source=Membership.Source.SIGNUP).first()
     if existing:
         return existing
-    now = timezone.now()
-    ends_at = now + timedelta(days=tier.period_days) if tier.period_days else None
-    return Membership.objects.create(
-        member=member, tier=tier, starts_at=now, ends_at=ends_at, source=Membership.Source.SIGNUP
-    )
+    with transaction.atomic():
+        now = timezone.now()
+        ends_at = now + timedelta(days=tier.period_days) if tier.period_days else None
+        membership = Membership.objects.create(
+            member=member, tier=tier, starts_at=now, ends_at=ends_at, source=Membership.Source.SIGNUP
+        )
+        _credit_keys(membership, KeysEntry.Reason.SIGNUP_BONUS)
+    return membership
 
 
 def grant_paid_membership(member, tier: SealTier, payment_intent) -> Membership:
@@ -35,11 +41,25 @@ def grant_paid_membership(member, tier: SealTier, payment_intent) -> Membership:
     with transaction.atomic():
         now = timezone.now()
         start = membership_selector.latest_paid_end(member, tier, now) or now
-        return Membership.objects.create(
+        membership = Membership.objects.create(
             member=member,
             tier=tier,
             starts_at=start,
             ends_at=start + timedelta(days=tier.period_days),
             source=Membership.Source.PAYMENT,
             payment_intent=payment_intent,
+        )
+        _credit_keys(membership, KeysEntry.Reason.SEAL_PURCHASE)
+    return membership
+
+
+def _credit_keys(membership: Membership, reason: str) -> None:
+    """Credit the tier's keys once per membership (idempotent by reference)."""
+    if membership.tier.initial_keys:
+        ledger_service.post_entry(
+            membership.member,
+            membership.tier.initial_keys,
+            reason,
+            reference=f"membership:{membership.pk}",
+            note=membership.tier.name,
         )

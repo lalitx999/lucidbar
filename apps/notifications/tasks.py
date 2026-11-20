@@ -95,3 +95,31 @@ def notify_payment(intent_id: int, event: str) -> None:
             telegram.send_photo(fh.read(), caption)
     else:
         telegram.send_message(caption)
+
+
+@shared_task(
+    autoretry_for=(TelegramTemporaryError,),
+    retry_backoff=15,
+    retry_backoff_max=600,
+    retry_jitter=True,
+    max_retries=5,
+)
+def notify_redemption(redemption_id: int) -> None:
+    """Tell staff a treasure was unlocked so they can prepare it."""
+    from apps.treasures.models import Redemption
+
+    redemption = Redemption.objects.select_related("member", "treasure").filter(pk=redemption_id).first()
+    if redemption is None:
+        return
+    member = redemption.member
+    text = "\n".join(
+        [
+            "<b>Treasure unlocked</b>",
+            "",
+            f"Member: {escape(member.full_name)} (@{escape(member.handle)})",
+            f"Treasure: {escape(redemption.treasure.name)}",
+            f"Keys spent: {redemption.keys_spent}",
+            f"Claim code: <code>{escape(redemption.claim_code)}</code>",
+        ]
+    )
+    telegram.send_message(text)

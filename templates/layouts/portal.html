@@ -26,16 +26,16 @@
       <a href="{% url 'core:portal' %}" class="tabbar-item{% if active_tab == 'portal' %} active{% endif %}"{% if active_tab == 'portal' %} aria-current="page"{% endif %}>
         {% icon "sparkles" %}<span>{% translate "Portal" %}</span>
       </a>
-      {% comment %} Keys, Reveal and Treasures open in Phases 3-4. {% endcomment %}
-      <span class="tabbar-item disabled" aria-disabled="true">
+      <a href="{% url 'keys:keys' %}" class="tabbar-item{% if active_tab == 'keys' %} active{% endif %}"{% if active_tab == 'keys' %} aria-current="page"{% endif %}>
         {% icon "coins" %}<span>{% translate "Keys" %}</span>
-      </span>
+      </a>
+      {% comment %} Reveal opens in Phase 4. {% endcomment %}
       <span class="tabbar-item disabled" aria-disabled="true">
         {% icon "refresh" %}<span>{% translate "Reveal" %}</span>
       </span>
-      <span class="tabbar-item disabled" aria-disabled="true">
+      <a href="{% url 'treasures:catalog' %}" class="tabbar-item{% if active_tab == 'treasures' %} active{% endif %}"{% if active_tab == 'treasures' %} aria-current="page"{% endif %}>
         {% icon "gift" %}<span>{% translate "Treasures" %}</span>
-      </span>
+      </a>
       <a href="{% url 'accounts:identity' %}" class="tabbar-item{% if active_tab == 'identity' %} active{% endif %}"{% if active_tab == 'identity' %} aria-current="page"{% endif %}>
         {% icon "user" %}<span>{% translate "Identity" %}</span>
       </a>

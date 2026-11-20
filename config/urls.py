@@ -11,5 +11,14 @@ urlpatterns = [
     path("", include("apps.core.urls")),
     path("", include("apps.accounts.urls")),
     path("", include("apps.payments.urls")),
+    path("", include("apps.keys.urls")),
+    path("", include("apps.treasures.urls")),
     path("staff/", include("apps.dashboard.urls")),
 ]
+
+if settings.DEBUG:
+    # Public media (treasure images) in local development. In production
+    # Nginx serves /media/. Payment slips are in private storage, never here.
+    from django.conf.urls.static import static
+
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -10,6 +10,7 @@
       <span class="font-display">{% translate "Lucid Staff" %}</span>
     </a>
     <a href="{% url 'dashboard:payments' %}" class="{% if section == 'payments' %}active{% endif %}">{% translate "Payments" %}</a>
+    <a href="{% url 'dashboard:redemptions' %}" class="{% if section == 'redemptions' %}active{% endif %}">{% translate "Treasures" %}</a>
     <form method="post" action="{% url 'accounts:logout' %}" class="m-0">
       {% csrf_token %}
       <button type="submit" class="btn btn-link btn-link-gold text-muted-lucid">{% translate "Sign out" %}</button>

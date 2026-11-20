@@ -38,6 +38,8 @@ LOCAL_APPS = [
     "apps.notifications",
     "apps.memberships",
     "apps.payments",
+    "apps.keys",
+    "apps.treasures",
     "apps.dashboard",
 ]
 

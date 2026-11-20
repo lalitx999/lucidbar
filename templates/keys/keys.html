@@ -1,0 +1,46 @@
+{% extends "layouts/portal.html" %}
+{% load i18n icons %}
+
+{% block title %}{% translate "Keys" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="d-flex flex-column gap-4 fade-in">
+  <div class="lucid-card has-halo text-center">
+    <span class="eyebrow text-gold">{% translate "Sanctum keys" %}</span>
+    <div class="d-flex align-items-center justify-content-center gap-3 mt-2">
+      <span class="emblem emblem-sm">{% icon "key" "icon-lg" %}</span>
+      <span class="font-display display-5 text-gold text-glow">{{ balance }}</span>
+    </div>
+    <p class="small text-muted-lucid mt-2 mb-0">{% translate "Unlock treasures with your keys. Earn more with your seal and at the club." %}</p>
+    <a href="{% url 'treasures:catalog' %}" class="btn btn-outline-gold mt-3 w-100">{% icon "gift" "icon-sm" %}<span>{% translate "Browse treasures" %}</span></a>
+  </div>
+
+  <div class="lucid-card">
+    <div class="eyebrow text-gold mb-2">{% translate "Ledger" %}</div>
+    {% if page.object_list %}
+    <ul class="ledger-list">
+      {% for entry in page.object_list %}
+      <li>
+        <div>
+          <div class="ledger-reason">{{ entry.get_reason_display }}</div>
+          <div class="ledger-meta">{{ entry.created_at|date:"j M Y H:i" }}{% if entry.note %} &middot; {{ entry.note }}{% endif %}</div>
+        </div>
+        <div class="text-end">
+          <div class="ledger-delta {% if entry.delta > 0 %}is-credit{% else %}is-debit{% endif %}">{% if entry.delta > 0 %}+{% endif %}{{ entry.delta }}</div>
+          <div class="ledger-meta">{% blocktranslate with balance=entry.balance_after %}Balance {{ balance }}{% endblocktranslate %}</div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if page.has_other_pages %}
+    <nav class="d-flex justify-content-between mt-3" aria-label="{% translate 'Ledger pages' %}">
+      {% if page.has_previous %}<a class="btn-link-gold" href="?page={{ page.previous_page_number }}">{% icon "arrow-left" "icon-xs" %}<span>{% translate "Newer" %}</span></a>{% else %}<span></span>{% endif %}
+      {% if page.has_next %}<a class="btn-link-gold" href="?page={{ page.next_page_number }}"><span>{% translate "Older" %}</span>{% icon "arrow-right" "icon-xs" %}</a>{% endif %}
+    </nav>
+    {% endif %}
+    {% else %}
+    <p class="small text-muted-lucid mb-0">{% translate "No key activity yet." %}</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
