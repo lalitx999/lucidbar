@@ -1,0 +1,64 @@
+{% extends "layouts/portal.html" %}
+{% load i18n icons %}
+
+{% block title %}{% translate "Choose your seal" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="d-flex flex-column gap-4 fade-in">
+  <div class="text-center">
+    <span class="eyebrow text-gold">{% translate "Seal tiers" %}</span>
+    <h1 class="font-display fw-semibold text-uppercase tracking-wide fs-5 mt-2 mb-1">{% translate "Choose your seal" %}</h1>
+    {% if current %}
+    <p class="small text-muted-lucid mb-0">
+      {% blocktranslate with name=current.tier.name %}Current seal: {{ name }}{% endblocktranslate %}{% if current.ends_at %} &middot; {% blocktranslate with date=current.ends_at|date:"j M Y" %}until {{ date }}{% endblocktranslate %}{% endif %}
+    </p>
+    {% endif %}
+  </div>
+
+  {% if open_intent and open_intent.status != "awaiting_slip" %}
+  <a href="{% url 'payments:pay' open_intent.reference %}" class="alert alert-secondary d-flex align-items-center gap-2 small mb-0 text-decoration-none">
+    {% icon "refresh" "icon-sm" %}
+    <span>{% translate "Your payment is being checked. Tap to see its status." %}</span>
+  </a>
+  {% endif %}
+
+  {% for tier in tiers %}
+  <article class="lucid-card seal-card seal-{{ tier.code }}{% if current and current.tier_id == tier.id %} is-current{% endif %}">
+    <div class="d-flex justify-content-between align-items-start gap-3">
+      <div>
+        <h2 class="font-display fw-semibold text-uppercase tracking-wide fs-6 mb-1">{{ tier.name }}</h2>
+        {% if tier.tagline %}<p class="small text-muted-lucid mb-0">{{ tier.tagline }}</p>{% endif %}
+      </div>
+      <div class="text-end">
+        {% if tier.is_free %}
+        <div class="font-display fs-5 text-gold">{% translate "Free" %}</div>
+        {% else %}
+        <div class="font-display fs-5 text-gold">{{ tier.price_thb|floatformat:"0g" }} <span class="small">THB</span></div>
+        <div class="micro text-faint">{% blocktranslate count days=tier.period_days %}per {{ days }} day{% plural %}per {{ days }} days{% endblocktranslate %}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <ul class="seal-benefits">
+      <li>{% icon "key" "icon-sm" %}<span>{% blocktranslate count keys=tier.initial_keys %}{{ keys }} Sanctum key{% plural %}{{ keys }} Sanctum keys{% endblocktranslate %}</span></li>
+      {% for benefit in tier.benefit_list %}
+      <li>{% icon "star" "icon-sm" %}<span>{{ benefit }}</span></li>
+      {% endfor %}
+    </ul>
+
+    {% if current and current.tier_id == tier.id and tier.is_free %}
+      <div class="seal-status">{% icon "shield-check" "icon-sm" %}<span>{% translate "Your current seal" %}</span></div>
+    {% elif not tier.is_free %}
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="tier" value="{{ tier.code }}">
+        <button type="submit" class="btn btn-lucid">
+          <span>{% if current and current.tier_id == tier.id %}{% translate "Renew" %}{% else %}{% blocktranslate with name=tier.name %}Get {{ name }}{% endblocktranslate %}{% endif %}</span>
+          {% icon "arrow-right" "icon-sm" %}
+        </button>
+      </form>
+    {% endif %}
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

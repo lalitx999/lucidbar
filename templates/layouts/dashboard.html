@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% comment %} Staff dashboard layout: same theme, wider page for tablets and desktops. {% endcomment %}
+
+{% block body %}
+<div class="dash-shell">
+  <nav class="dash-nav">
+    <a href="{% url 'dashboard:home' %}" class="d-flex align-items-center gap-2 me-auto text-white">
+      <img src="{% static 'img/logo-256.png' %}" alt="" class="brand-logo brand-logo-sm" width="32" height="32">
+      <span class="font-display">{% translate "Lucid Staff" %}</span>
+    </a>
+    <a href="{% url 'dashboard:payments' %}" class="{% if section == 'payments' %}active{% endif %}">{% translate "Payments" %}</a>
+    <form method="post" action="{% url 'accounts:logout' %}" class="m-0">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-link btn-link-gold text-muted-lucid">{% translate "Sign out" %}</button>
+    </form>
+  </nav>
+  <main class="dash-main">
+    {% include "partials/messages.html" %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Payments" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<h1 class="font-display fs-4 text-uppercase tracking-wide mt-3 mb-3">{% translate "Payments to review" %}</h1>
+
+{% if queue %}
+<div class="table-responsive">
+  <table class="table dash-table align-middle">
+    <thead>
+      <tr><th>{% translate "Reference" %}</th><th>{% translate "Member" %}</th><th>{% translate "Seal" %}</th><th class="text-end">{% translate "Amount" %}</th><th>{% translate "Status" %}</th><th>{% translate "Waiting since" %}</th></tr>
+    </thead>
+    <tbody>
+      {% for intent in queue %}
+      <tr>
+        <td><a href="{% url 'dashboard:payment_detail' intent.reference %}" class="font-monospace">{{ intent.reference }}</a></td>
+        <td>{{ intent.member.full_name }}<div class="small text-muted-lucid">{{ intent.member.email }}</div></td>
+        <td>{{ intent.tier.name }}</td>
+        <td class="text-end">{{ intent.amount_thb|floatformat:"2g" }}</td>
+        <td><span class="status-pill status-{{ intent.status }}">{{ intent.get_status_display }}</span></td>
+        <td>{{ intent.updated_at|timesince }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted-lucid">{% translate "Nothing to review." %}</p>
+{% endif %}
+
+<h2 class="font-display fs-6 text-uppercase tracking-wide mt-5 mb-3">{% translate "Recent decisions" %}</h2>
+{% if recent %}
+<div class="table-responsive">
+  <table class="table dash-table align-middle">
+    <thead>
+      <tr><th>{% translate "Reference" %}</th><th>{% translate "Member" %}</th><th>{% translate "Seal" %}</th><th>{% translate "Status" %}</th><th>{% translate "Decided by" %}</th><th>{% translate "When" %}</th></tr>
+    </thead>
+    <tbody>
+      {% for intent in recent %}
+      <tr>
+        <td><a href="{% url 'dashboard:payment_detail' intent.reference %}" class="font-monospace">{{ intent.reference }}</a></td>
+        <td>{{ intent.member.full_name }}</td>
+        <td>{{ intent.tier.name }}</td>
+        <td><span class="status-pill status-{{ intent.status }}">{{ intent.get_status_display }}</span></td>
+        <td>{% if intent.decided_by %}{{ intent.decided_by.full_name }}{% else %}{% translate "Automatic" %}{% endif %}</td>
+        <td>{{ intent.decided_at|date:"j M Y H:i" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted-lucid">{% translate "No decisions yet." %}</p>
+{% endif %}
+{% endblock %}

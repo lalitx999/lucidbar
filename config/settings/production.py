@@ -5,6 +5,8 @@ DEBUG is always False. Nginx serves /static/ directly; WhiteNoise stays in the
 middleware stack as a fallback.
 """
 
+from django.core.exceptions import ImproperlyConfigured
+
 from .base import *  # noqa: F403
 from .base import env
 
@@ -26,3 +28,7 @@ LOGGING["root"]["level"] = env("DJANGO_LOG_LEVEL", default="INFO")  # noqa: F405
 
 # HSTS preload is a long-term commitment for the whole domain; opt in deliberately later.
 SILENCED_SYSTEM_CHECKS = ["security.W021"]
+
+# Fake slip approval is a local development aid only.
+if EASYSLIP_MODE == "fake":  # noqa: F405
+    raise ImproperlyConfigured("EASYSLIP_MODE=fake is not allowed in production.")

@@ -448,7 +448,114 @@ body {
   border-top: 1px solid var(--lucid-border);
 }
 .identity-facts dt { color: var(--lucid-muted); font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; }
-.identity-facts dd { margin: 0; font-size: 0.8125rem; text-align: right; word-break: break-all; }
+.identity-facts dd { margin: 0; font-size: 0.8125rem; text-align: right; overflow-wrap: anywhere; }
+
+/* ---------------------------------------------------------------------------
+   Seals and payment
+--------------------------------------------------------------------------- */
+.seal-card { display: flex; flex-direction: column; gap: 1rem; }
+.seal-card.is-current { border-color: rgba(var(--lucid-gold-rgb), 0.5); }
+.seal-gold { background: linear-gradient(160deg, #15110a, var(--lucid-card) 60%); }
+.seal-obsidian { background: linear-gradient(160deg, #101014, #050505 70%); border-color: #3a3a46; }
+
+.seal-benefits {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: #d4d4d8;
+}
+.seal-benefits li { display: flex; align-items: center; gap: 0.5rem; }
+.seal-benefits .icon { color: var(--lucid-gold); }
+
+.seal-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  color: var(--lucid-gold);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.pay-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: #09090b;
+  border: 1px solid var(--lucid-border);
+  border-radius: 0.875rem;
+}
+.pay-tabs .nav-link {
+  width: 100%;
+  border-radius: 0.625rem;
+  color: var(--lucid-muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.pay-tabs .nav-link.active { background: rgba(var(--lucid-gold-rgb), 0.15); color: var(--lucid-gold); }
+
+.qr-box {
+  width: 100%;
+  max-width: 15rem;
+  padding: 0.75rem;
+  background: #fff;
+  border-radius: 0.75rem;
+}
+.qr-box svg { display: block; width: 100%; height: auto; }
+
+.zoom-thumb {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  background: none;
+  border: 1px solid var(--lucid-border);
+  border-radius: 0.75rem;
+}
+.zoom-thumb img { display: block; width: 100%; height: auto; transition: transform 0.3s ease; }
+.zoom-thumb:hover img { transform: scale(1.03); }
+
+.lucid-modal { background: var(--lucid-card-raised); border: 1px solid var(--lucid-border-strong); }
+
+/* ---------------------------------------------------------------------------
+   Staff dashboard
+--------------------------------------------------------------------------- */
+.dash-shell { min-height: 100dvh; background: var(--lucid-page); }
+.dash-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--lucid-border);
+  background: #000;
+}
+.dash-nav a { color: var(--lucid-muted); text-decoration: none; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.dash-nav a.active, .dash-nav a:hover { color: var(--lucid-gold); }
+.dash-main { max-width: 64rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+.dash-table { --bs-table-bg: transparent; --bs-table-color: #e4e4e7; --bs-table-border-color: var(--lucid-border); font-size: 0.8125rem; }
+.dash-table th { color: var(--lucid-muted); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.slip-preview { max-width: 100%; max-height: 70vh; border: 1px solid var(--lucid-border); border-radius: 0.75rem; }
+.status-pill {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--lucid-border-strong);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.status-review, .status-verifying { color: #fcd34d; border-color: #78350f; }
+.status-approved, .status-verified { color: #86efac; border-color: #14532d; }
+.status-rejected { color: #fca5a5; border-color: #7f1d1d; }
 
 /* ---------------------------------------------------------------------------
    Icons (SVG sprite)

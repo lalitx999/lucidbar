@@ -13,6 +13,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods, require_POST
 
 from apps.core.decorators import member_required
+from apps.memberships.selectors import membership_selector
 
 from . import flow
 from .forms import (
@@ -195,7 +196,12 @@ def identity(request):
         profile_service.update_profile(request.user, **form.cleaned_data)
         messages.success(request, _("Your profile has been updated."))
         return redirect("accounts:identity")
-    return render(request, "portal/identity.html", {"form": form, "active_tab": "identity"})
+    context = {
+        "form": form,
+        "active_tab": "identity",
+        "membership": membership_selector.current_membership(request.user),
+    }
+    return render(request, "portal/identity.html", context)
 
 
 @member_required

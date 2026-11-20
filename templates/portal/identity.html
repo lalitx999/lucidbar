@@ -12,6 +12,7 @@
     <dl class="identity-facts mt-3 mb-0">
       <div><dt>{% translate "Email" %}</dt><dd>{{ request.user.email }}</dd></div>
       <div><dt>{% translate "Mobile" %}</dt><dd>{{ request.user.display_phone }}</dd></div>
+      <div><dt>{% translate "Seal" %}</dt><dd>{{ membership.tier.name|default:"-" }}</dd></div>
       <div><dt>{% translate "Member since" %}</dt><dd>{{ request.user.date_joined|date:"j M Y" }}</dd></div>
     </dl>
   </div>
