@@ -1,0 +1,11 @@
+{% load icons %}
+{% if messages %}
+<div class="mt-4 d-grid gap-2" role="status">
+  {% for message in messages %}
+  <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% else %}alert-secondary{% endif %} d-flex align-items-center gap-2 small mb-0 py-2">
+    {% if message.tags == "success" %}{% icon "shield-check" "icon-sm" %}{% else %}{% icon "alert" "icon-sm" %}{% endif %}
+    <span>{{ message }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

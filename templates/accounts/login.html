@@ -1,0 +1,33 @@
+{% extends "layouts/public.html" %}
+{% load i18n icons %}
+
+{% block title %}{% translate "Sign in" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<form method="post" class="d-flex flex-column gap-4 fade-in" novalidate>
+  {% csrf_token %}
+  {% translate "Member access" as eyebrow %}{% translate "Enter the portal" as title %}
+  {% translate "Sign in with the email and password of your membership." as lead %}
+  {% include "partials/screen_heading.html" %}
+
+  {% include "partials/form_errors.html" %}
+
+  <div class="d-flex flex-column gap-3">
+    {% include "partials/field.html" with field=form.email icon="mail" %}
+    {% include "partials/field.html" with field=form.password icon="lock" %}
+    <a href="{% url 'accounts:password_reset' %}" class="btn-link-gold justify-content-end">{% translate "Forgot password?" %}</a>
+  </div>
+
+  <button type="submit" class="btn btn-lucid">
+    <span>{% translate "Enter the portal" %}</span>
+    {% icon "arrow-right" "icon-sm" %}
+  </button>
+
+  <div class="d-flex flex-column align-items-center gap-2">
+    <a href="{% url 'accounts:register' %}" class="btn-link-gold">{% translate "Not a member yet? Join now" %}</a>
+    <a href="{% url 'core:welcome' %}" class="btn-link-gold text-muted-lucid">
+      {% icon "arrow-left" "icon-xs" %}<span>{% translate "Back" %}</span>
+    </a>
+  </div>
+</form>
+{% endblock %}

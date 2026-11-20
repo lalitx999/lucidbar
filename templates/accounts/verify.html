@@ -1,0 +1,31 @@
+{% extends "layouts/public.html" %}
+{% load i18n icons %}
+
+{% block title %}{% translate "Verify email" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column gap-4 fade-in">
+  <form method="post" class="d-flex flex-column gap-4" novalidate>
+    {% csrf_token %}
+    {% translate "Identity check" as eyebrow %}{% translate "Enter your code" as title %}
+    {% blocktranslate asvar lead %}We sent a 6-digit code to {{ email }}. It expires in {{ minutes }} minutes.{% endblocktranslate %}
+    {% include "partials/screen_heading.html" %}
+
+    <div class="emblem mx-auto glow-gold">{% icon "shield-check" "icon-xl" %}</div>
+
+    {% include "partials/form_errors.html" %}
+    {% include "partials/field.html" with field=form.code icon="key" %}
+
+    <button type="submit" class="btn btn-lucid">
+      <span>{% translate "Verify" %}</span>
+      {% icon "arrow-right" "icon-sm" %}
+    </button>
+  </form>
+
+  <form method="post" action="{% url 'accounts:resend_code' %}" class="text-center">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-link btn-link-gold">{% translate "Did not get it? Send a new code" %}</button>
+  </form>
+  <p class="text-center small text-faint mb-0">{% translate "Check your spam folder if the email does not arrive within a minute." %}</p>
+</div>
+{% endblock %}

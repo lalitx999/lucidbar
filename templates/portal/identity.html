@@ -1,0 +1,42 @@
+{% extends "layouts/portal.html" %}
+{% load i18n icons %}
+
+{% block title %}{% translate "Identity" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="d-flex flex-column gap-4 fade-in">
+  <div class="lucid-card has-halo text-center">
+    <span class="eyebrow text-gold">{% translate "Member identity" %}</span>
+    <h1 class="font-display fw-semibold text-uppercase tracking-wide fs-5 mt-2 mb-1">{{ request.user.full_name }}</h1>
+    <div class="small text-gold font-monospace">@{{ request.user.handle }}</div>
+    <dl class="identity-facts mt-3 mb-0">
+      <div><dt>{% translate "Email" %}</dt><dd>{{ request.user.email }}</dd></div>
+      <div><dt>{% translate "Mobile" %}</dt><dd>{{ request.user.display_phone }}</dd></div>
+      <div><dt>{% translate "Member since" %}</dt><dd>{{ request.user.date_joined|date:"j M Y" }}</dd></div>
+    </dl>
+  </div>
+
+  <form method="post" class="lucid-card d-flex flex-column gap-3" novalidate>
+    {% csrf_token %}
+    <div class="eyebrow text-gold">{% translate "Edit profile" %}</div>
+    {% include "partials/form_errors.html" %}
+    {% include "partials/field.html" with field=form.full_name icon="user" %}
+    <div class="row g-2">
+      <div class="col-5">{% include "partials/field.html" with field=form.country_code %}</div>
+      <div class="col-7">{% include "partials/field.html" with field=form.phone %}</div>
+    </div>
+    {% include "partials/field.html" with field=form.nationality %}
+    <button type="submit" class="btn btn-lucid">{% translate "Save changes" %}</button>
+  </form>
+
+  <div class="d-flex flex-column gap-2">
+    <a href="{% url 'accounts:change_password' %}" class="btn btn-outline-gold">
+      {% icon "lock" "icon-sm" %}<span>{% translate "Change password" %}</span>
+    </a>
+    <form method="post" action="{% url 'accounts:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-muted w-100">{% translate "Sign out" %}</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

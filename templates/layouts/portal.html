@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static i18n icons %}
+{% comment %}
+  Signed-in member area: compact header, scrolling content, and the fixed
+  five-tab bar in the same order as the original portal.
+  Views pass `active_tab` (portal, keys, reveal, treasures, identity).
+{% endcomment %}
+
+{% block body %}
+<div class="app-shell">
+  <div class="app-column">
+    <header class="portal-header">
+      <a href="{% url 'core:portal' %}" class="d-flex align-items-center gap-2 text-decoration-none">
+        <img src="{% static 'img/logo-256.png' %}" alt="" class="brand-logo brand-logo-sm" width="32" height="32">
+        <span class="font-display text-white tracking-wide">Lucid</span>
+      </a>
+      <span class="small text-gold font-monospace">@{{ request.user.handle }}</span>
+    </header>
+
+    <main class="app-content portal-content">
+      {% include "partials/messages.html" %}
+      {% block content %}{% endblock %}
+    </main>
+
+    <nav class="tabbar" aria-label="{% translate 'Member navigation' %}">
+      <a href="{% url 'core:portal' %}" class="tabbar-item{% if active_tab == 'portal' %} active{% endif %}"{% if active_tab == 'portal' %} aria-current="page"{% endif %}>
+        {% icon "sparkles" %}<span>{% translate "Portal" %}</span>
+      </a>
+      {% comment %} Keys, Reveal and Treasures open in Phases 3-4. {% endcomment %}
+      <span class="tabbar-item disabled" aria-disabled="true">
+        {% icon "coins" %}<span>{% translate "Keys" %}</span>
+      </span>
+      <span class="tabbar-item disabled" aria-disabled="true">
+        {% icon "refresh" %}<span>{% translate "Reveal" %}</span>
+      </span>
+      <span class="tabbar-item disabled" aria-disabled="true">
+        {% icon "gift" %}<span>{% translate "Treasures" %}</span>
+      </span>
+      <a href="{% url 'accounts:identity' %}" class="tabbar-item{% if active_tab == 'identity' %} active{% endif %}"{% if active_tab == 'identity' %} aria-current="page"{% endif %}>
+        {% icon "user" %}<span>{% translate "Identity" %}</span>
+      </a>
+    </nav>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% comment %}
+  Heading block used at the top of each onboarding screen.
+  Usage: {% include "partials/screen_heading.html" with eyebrow="Member access" title="Enter the portal" lead="..." %}
+{% endcomment %}
+<div class="d-flex flex-column gap-2 text-center">
+  <span class="eyebrow text-gold">{{ eyebrow }}</span>
+  <h2 class="font-display fw-semibold text-uppercase tracking-wide fs-5 mb-0">{{ title }}</h2>
+  {% if lead %}<p class="text-muted-lucid small px-3 mb-0">{{ lead }}</p>{% endif %}
+</div>

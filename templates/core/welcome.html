@@ -1,0 +1,68 @@
+{% extends "layouts/public.html" %}
+{% load i18n icons %}
+
+{% block title %}{% translate "Welcome" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="d-flex flex-column gap-4 text-center fade-in py-2">
+
+  <div class="d-flex flex-column gap-2 mt-2">
+    <h2 class="font-display fw-semibold text-uppercase tracking-wider lh-sm fs-6 mb-0">
+      {% translate "Welcome to" %}<br>
+      <span class="text-gold text-glow fs-5">{% translate "Lucid Society" %}</span>
+    </h2>
+    <div class="divider-diamond" aria-hidden="true">
+      {% icon "diamond" "icon-xs" %}
+      <span class="line"></span>
+      {% icon "diamond" "icon-xs" %}
+    </div>
+    <p class="text-2xs text-uppercase text-muted-lucid mt-1 mb-0 tracking-wide">
+      {% translate "You've found the entrance." %}<br>
+      {% translate "What you see is only the beginning." %}
+    </p>
+  </div>
+
+  <div class="lucid-card has-halo d-flex flex-column align-items-center gap-3">
+    <span class="eyebrow text-gold">{% translate "Become part of something" %}</span>
+    <h3 class="font-display fw-semibold text-uppercase tracking-wider fs-6 mb-0">{% translate "Extraordinary" %}</h3>
+    <div class="emblem my-2 glow-gold">
+      {% icon "lucid-eye" "icon-xl pulse" %}
+    </div>
+    <div class="d-flex flex-column gap-1 font-monospace">
+      <span class="text-2xs text-uppercase text-muted-lucid tracking-wider">{% translate "Rewards. Experiences. Destiny." %}</span>
+      <span class="micro text-faint">{% translate "All await inside." %}</span>
+    </div>
+  </div>
+
+  <div class="d-flex flex-column gap-3 px-2">
+    <a href="{% url 'accounts:register' %}" class="btn btn-lucid">
+      <span>{% translate "Join now" %}</span>
+      {% icon "arrow-right" "icon-sm" %}
+    </a>
+    <a href="{% url 'accounts:login' %}" class="btn-link-gold mt-1">
+      {% icon "lock" "icon-xs" %}
+      <span>{% translate "Already a member? Enter the portal" %}</span>
+    </a>
+  </div>
+
+  <div class="row g-2 border-top-faint pt-4 mt-2">
+    <div class="col-4 d-flex flex-column align-items-center gap-1">
+      <span class="perk-icon">{% icon "star" "icon" %}</span>
+      <span class="micro fw-bold text-muted-lucid lh-sm mt-1 perk-label">{% translate "Exclusive" %}<br>{% translate "Access" %}</span>
+    </div>
+    <div class="col-4 d-flex flex-column align-items-center gap-1">
+      <span class="perk-icon">{% icon "trophy" "icon" %}</span>
+      <span class="micro fw-bold text-muted-lucid lh-sm mt-1 perk-label">{% translate "Weekly" %}<br>{% translate "Reveals" %}</span>
+    </div>
+    <div class="col-4 d-flex flex-column align-items-center gap-1">
+      <span class="perk-icon">{% icon "gift" "icon" %}</span>
+      <span class="micro fw-bold text-muted-lucid lh-sm mt-1 perk-label">{% translate "Treasures" %}<br>{% translate "Await" %}</span>
+    </div>
+  </div>
+
+  <p class="micro fw-bold text-faint d-flex align-items-center justify-content-center gap-1 mt-3 pt-3 border-top-faint mb-0">
+    {% icon "lock" "icon-xs" %}
+    <span>{% translate "Secure. Private. Invitational." %}</span>
+  </p>
+</section>
+{% endblock %}

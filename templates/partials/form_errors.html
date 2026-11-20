@@ -1,0 +1,7 @@
+{% load icons %}
+{% if form.non_field_errors %}
+<div class="alert alert-danger d-flex align-items-center gap-2 small py-2 mb-0" role="alert">
+  {% icon "alert" "icon-sm" %}
+  <span>{% for error in form.non_field_errors %}{{ error }}{% if not forloop.last %} {% endif %}{% endfor %}</span>
+</div>
+{% endif %}

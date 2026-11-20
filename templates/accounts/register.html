@@ -1,0 +1,45 @@
+{% extends "layouts/public.html" %}
+{% load i18n icons %}
+
+{% block title %}{% translate "Join" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<form method="post" class="d-flex flex-column gap-4 fade-in" novalidate>
+  {% csrf_token %}
+  {% translate "New member" as eyebrow %}{% translate "Claim your seal" as title %}
+  {% translate "Membership is for guests aged 20 and over. We will email you a code to verify your account." as lead %}
+  {% include "partials/screen_heading.html" %}
+
+  {% include "partials/form_errors.html" %}
+
+  <div class="d-flex flex-column gap-3">
+    {% include "partials/field.html" with field=form.full_name icon="user" %}
+    {% include "partials/field.html" with field=form.email icon="mail" %}
+
+    <div class="row g-2">
+      <div class="col-5">{% include "partials/field.html" with field=form.country_code %}</div>
+      <div class="col-7">{% include "partials/field.html" with field=form.phone %}</div>
+    </div>
+
+    <div class="row g-2">
+      <div class="col-6">{% include "partials/field.html" with field=form.date_of_birth %}</div>
+      <div class="col-6">{% include "partials/field.html" with field=form.nationality %}</div>
+    </div>
+
+    {% include "partials/field.html" with field=form.password icon="lock" %}
+    {% include "partials/field.html" with field=form.password_confirm icon="lock" %}
+    <p class="form-text mt-n1 mb-0">{% translate "At least 10 characters. Avoid common or easily guessed passwords." %}</p>
+
+    {% include "partials/field.html" with field=form.accept_terms %}
+  </div>
+
+  <button type="submit" class="btn btn-lucid">
+    <span>{% translate "Continue" %}</span>
+    {% icon "arrow-right" "icon-sm" %}
+  </button>
+
+  <div class="d-flex flex-column align-items-center gap-2">
+    <a href="{% url 'accounts:login' %}" class="btn-link-gold">{% icon "lock" "icon-xs" %}<span>{% translate "Already a member? Enter the portal" %}</span></a>
+  </div>
+</form>
+{% endblock %}

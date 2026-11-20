@@ -1,0 +1,23 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Django
+/staticfiles/
+/media/
+
+# Source download kept outside the app (vendored copy lives in static/vendor/)
+/bootstrap-5.3.8-dist/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

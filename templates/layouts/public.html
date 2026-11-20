@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% comment %}
+  Layout for public onboarding screens (welcome, login, register, OTP, seal, pay).
+  Mobile column with the brand header, as in the original entry screens.
+{% endcomment %}
+
+{% block body %}
+<div class="app-shell">
+  <main class="app-column">
+    <div class="app-content">
+      {% block brand_header %}
+      <header class="text-center pt-4">
+        <img src="{% static 'img/logo-256.png' %}" alt="{{ SITE_NAME }}" class="brand-logo mx-auto d-block" width="56" height="56">
+        <h1 class="brand-title text-glow">Lucid</h1>
+        <p class="micro text-muted-lucid mt-1 mb-0">{% translate "Society" %}</p>
+        <p class="text-3xs text-uppercase text-gold mt-1 mb-0 tracking-widest">{{ SITE_TAGLINE }}</p>
+      </header>
+      {% endblock %}
+
+      {% include "partials/messages.html" %}
+
+      <div class="my-auto py-4">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

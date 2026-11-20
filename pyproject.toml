@@ -1,0 +1,24 @@
+[project]
+name = "lucid"
+version = "0.1.0"
+description = "Lucid Society members portal (Django + PostgreSQL)"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py"]
+testpaths = ["apps", "tests"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["staticfiles", "media", "*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"*/tests/*" = ["S"]
+"tests/*" = ["S"]

@@ -1,0 +1,23 @@
+{% load icons %}
+{% comment %}
+  One form field in the Lucid style.
+  Usage: {% include "partials/field.html" with field=form.email icon="mail" %}
+{% endcomment %}
+<div class="lucid-field{% if field.errors %} has-error{% endif %}">
+  {% if field.field.widget.input_type == "checkbox" %}
+  <div class="form-check">
+    {{ field }}
+    <label class="form-check-label small text-muted-lucid" for="{{ field.id_for_label }}">{{ field.label }}</label>
+  </div>
+  {% else %}
+  <label class="lucid-label" for="{{ field.id_for_label }}">
+    {% if icon %}{% icon icon "icon-sm" %}{% endif %}
+    <span>{{ field.label }}</span>
+  </label>
+  {{ field }}
+  {% endif %}
+  {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+  {% for error in field.errors %}
+  <div class="lucid-error">{{ error }}</div>
+  {% endfor %}
+</div>
