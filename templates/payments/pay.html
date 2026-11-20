@@ -1,0 +1,130 @@
+{% extends "layouts/portal.html" %}
+{% load static i18n icons %}
+
+{% block title %}{% translate "Payment" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="d-flex flex-column gap-4 fade-in"
+         id="payment"
+         data-status="{{ intent.status }}"
+         data-status-url="{% url 'payments:status' intent.reference %}">
+
+  <div class="lucid-card has-halo text-center">
+    <span class="eyebrow text-gold">{{ intent.tier.name }}</span>
+    <div class="font-display fs-2 text-gold text-glow mt-2">{{ intent.amount_thb|floatformat:"2g" }} <span class="fs-6">THB</span></div>
+    <div class="small text-muted-lucid font-monospace">{% translate "Ref" %} {{ intent.reference }}</div>
+  </div>
+
+  {% if intent.status == "awaiting_slip" %}
+
+    {% if intent.status_message %}
+    <div class="alert alert-danger d-flex align-items-center gap-2 small mb-0 py-2" role="alert">
+      {% icon "alert" "icon-sm" %}<span>{{ intent.status_message }}</span>
+    </div>
+    {% endif %}
+
+    <div>
+      <ul class="nav nav-pills pay-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="tab-bank" data-bs-toggle="pill" data-bs-target="#pane-bank" type="button" role="tab" aria-controls="pane-bank" aria-selected="true">
+            {% blocktranslate with bank=bank.name|default:"Bank" %}{{ bank }} transfer{% endblocktranslate %}
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-qr" data-bs-toggle="pill" data-bs-target="#pane-qr" type="button" role="tab" aria-controls="pane-qr" aria-selected="false">
+            {% translate "PromptPay QR" %}
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content pt-3">
+        <div class="tab-pane fade show active" id="pane-bank" role="tabpanel" aria-labelledby="tab-bank" tabindex="0">
+          <div class="lucid-card d-flex flex-column gap-3">
+            <dl class="identity-facts mb-0">
+              <div><dt>{% translate "Bank" %}</dt><dd>{{ bank.name }}</dd></div>
+              <div><dt>{% translate "Account name" %}</dt><dd>{{ bank.holder }}</dd></div>
+              <div>
+                <dt>{% translate "Account no." %}</dt>
+                <dd class="d-flex align-items-center gap-2 justify-content-end">
+                  <strong class="text-gold font-monospace tracking-wide">{{ bank.number }}</strong>
+                  <button type="button" class="btn btn-sm btn-outline-gold py-1 px-2" data-copy="{{ bank.number }}" data-copied-label="{% translate 'Copied' %}">
+                    {% icon "copy" "icon-xs" %}<span>{% translate "Copy" %}</span>
+                  </button>
+                </dd>
+              </div>
+            </dl>
+            <button type="button" class="zoom-thumb" data-bs-toggle="modal" data-bs-target="#zoom-bank" aria-label="{% translate 'Enlarge bank passbook' %}">
+              <img src="{% static 'img/payment/bank-passbook.webp' %}" alt="{% translate 'Bank passbook with account details' %}" loading="lazy">
+            </button>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="pane-qr" role="tabpanel" aria-labelledby="tab-qr" tabindex="0">
+          <div class="lucid-card d-flex flex-column align-items-center gap-3 text-center">
+            {% if promptpay_svg %}
+              <div class="qr-box">{{ promptpay_svg }}</div>
+              <p class="small text-muted-lucid mb-0">{% translate "Scan with your banking app. The amount is filled in for you." %}</p>
+            {% else %}
+              <button type="button" class="zoom-thumb" data-bs-toggle="modal" data-bs-target="#zoom-qr" aria-label="{% translate 'Enlarge PromptPay QR' %}">
+                <img src="{% static 'img/payment/promptpay-poster.jpg' %}" alt="{% translate 'Club PromptPay QR code' %}" loading="lazy">
+              </button>
+              <p class="small text-muted-lucid mb-0">
+                {% blocktranslate with amount=intent.amount_thb|floatformat:"2g" %}Scan with your banking app and enter exactly {{ amount }} THB.{% endblocktranslate %}
+              </p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form method="post" action="{% url 'payments:upload_slip' intent.reference %}" enctype="multipart/form-data" class="lucid-card d-flex flex-column gap-3" novalidate>
+      {% csrf_token %}
+      <div class="eyebrow text-gold">{% translate "Upload your slip" %}</div>
+      <p class="small text-muted-lucid mb-0">{% translate "After transferring, upload the slip screenshot from your banking app. We check it automatically." %}</p>
+      {% include "partials/field.html" with field=form.slip icon="download" %}
+      <button type="submit" class="btn btn-lucid">
+        <span>{% translate "Submit slip" %}</span>{% icon "arrow-right" "icon-sm" %}
+      </button>
+    </form>
+
+    <form method="post" action="{% url 'payments:cancel' intent.reference %}" class="text-center">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-link btn-link-gold text-muted-lucid">{% translate "Cancel this payment" %}</button>
+    </form>
+
+    <div class="modal fade" id="zoom-bank" tabindex="-1" aria-label="{% translate 'Bank passbook' %}" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered"><div class="modal-content lucid-modal">
+        <button type="button" class="btn-close btn-close-white ms-auto m-2" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
+        <img src="{% static 'img/payment/bank-passbook.webp' %}" alt="{% translate 'Bank passbook with account details' %}" class="img-fluid rounded-bottom">
+      </div></div>
+    </div>
+    <div class="modal fade" id="zoom-qr" tabindex="-1" aria-label="{% translate 'PromptPay QR' %}" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered"><div class="modal-content lucid-modal">
+        <button type="button" class="btn-close btn-close-white ms-auto m-2" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
+        <img src="{% static 'img/payment/promptpay-poster.jpg' %}" alt="{% translate 'Club PromptPay QR code' %}" class="img-fluid rounded-bottom">
+      </div></div>
+    </div>
+
+  {% else %}
+
+    <div class="lucid-card text-center d-flex flex-column align-items-center gap-3 pay-state pay-state-{{ intent.status }}">
+      <span class="emblem glow-gold">
+        {% if intent.status == "approved" %}{% icon "shield-check" "icon-xl" %}
+        {% elif intent.status == "verifying" or intent.status == "review" %}{% icon "refresh" "icon-xl pulse" %}
+        {% else %}{% icon "alert" "icon-xl" %}{% endif %}
+      </span>
+      <p class="mb-0" id="payment-message" aria-live="polite">{{ intent.status_message|default:status_text }}</p>
+      {% if intent.status == "approved" %}
+        <a href="{% url 'core:portal' %}" class="btn btn-lucid">{% translate "Enter the portal" %}</a>
+      {% elif intent.status == "expired" or intent.status == "cancelled" or intent.status == "rejected" %}
+        <a href="{% url 'payments:choose_seal' %}" class="btn btn-lucid">{% translate "Start again" %}</a>
+      {% endif %}
+    </div>
+
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/payment.js' %}" defer></script>
+{% endblock %}

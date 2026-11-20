@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from apps.core import ratelimit
+from apps.memberships.services import membership_service
 
 from ..models import EmailOTP, Member
 from ..selectors.member_selector import get_member_by_email
@@ -87,6 +88,9 @@ def reset_password(email: str, code: str, new_password: str) -> Member:
             member.status = Member.Status.ACTIVE
             member.email_verified_at = timezone.now()
             fields += ["status", "email_verified_at"]
-        member.save(update_fields=fields)
+            member.save(update_fields=fields)
+            membership_service.grant_signup_membership(member)
+        else:
+            member.save(update_fields=fields)
     ratelimit.reset(LOGIN_EMAIL_SCOPE, member.email)
     return member

@@ -19,11 +19,28 @@
     <span class="micro text-faint text-end">{% translate "Coming soon" %}</span>
   </div>
 
-  <div class="lucid-card">
-    <div class="eyebrow text-gold mb-2">{% translate "Your seal" %}</div>
-    <p class="small text-muted-lucid mb-0">
-      {% translate "Seal tiers and payment open in the next release. Your account is verified and ready." %}
-    </p>
+  <div class="lucid-card seal-card{% if membership %} seal-{{ membership.tier.code }}{% endif %}">
+    <div class="d-flex justify-content-between align-items-start gap-3">
+      <div>
+        <div class="eyebrow text-gold mb-1">{% translate "Your seal" %}</div>
+        <div class="font-display fs-5 text-uppercase tracking-wide">{{ membership.tier.name|default:_("None") }}</div>
+        {% if membership.ends_at %}
+        <div class="small text-muted-lucid">{% blocktranslate with date=membership.ends_at|date:"j M Y" %}Active until {{ date }}{% endblocktranslate %}</div>
+        {% endif %}
+      </div>
+      <span class="emblem emblem-sm">{% icon "shield-check" "icon-lg" %}</span>
+    </div>
+
+    {% if open_intent %}
+      <a href="{% url 'payments:pay' open_intent.reference %}" class="btn btn-outline-gold">
+        {% icon "refresh" "icon-sm" %}<span>{% translate "Payment in progress" %}</span>
+      </a>
+    {% else %}
+      <a href="{% url 'payments:choose_seal' %}" class="btn btn-lucid">
+        <span>{% if membership and not membership.tier.is_free %}{% translate "Renew or upgrade" %}{% else %}{% translate "Upgrade your seal" %}{% endif %}</span>
+        {% icon "arrow-right" "icon-sm" %}
+      </a>
+    {% endif %}
   </div>
 </section>
 {% endblock %}

@@ -8,6 +8,7 @@ variables (loaded from `.env` by django-environ). Nothing secret is hardcoded.
 from pathlib import Path
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -35,6 +36,9 @@ LOCAL_APPS = [
     "apps.core",
     "apps.accounts",
     "apps.notifications",
+    "apps.memberships",
+    "apps.payments",
+    "apps.dashboard",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS
@@ -143,15 +147,22 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+MEDIA_ROOT = env.path("MEDIA_ROOT", default=BASE_DIR / "media")
+MEDIA_URL = "/media/"
+
+# Private uploads (payment slips). This folder has no URL and is never served
+# by Nginx; files are only streamed through permission-checked views.
+PRIVATE_MEDIA_ROOT = env.path("PRIVATE_MEDIA_ROOT", default=BASE_DIR / "private")
+
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "private": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": PRIVATE_MEDIA_ROOT, "base_url": None},
+    },
     # Hashed file names give safe long-term caching for the PWA service worker.
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
-
-# Private uploads (payment slips). Never served as public static files.
-MEDIA_ROOT = env.path("MEDIA_ROOT", default=BASE_DIR / "media")
-MEDIA_URL = "/media/"
 
 # ---------------------------------------------------------------------------
 # Celery (email, Telegram and EasySlip run here, never in the request cycle)
@@ -224,6 +235,37 @@ LOGGING = {
 # ---------------------------------------------------------------------------
 SITE_NAME = "Lucid Society"
 SITE_TAGLINE = "See beyond the illusion"
+
+# ---------------------------------------------------------------------------
+# Payments
+# ---------------------------------------------------------------------------
+# Where members send money. Shown on the Pay screen and used to check slips.
+PAYMENT_BANK_NAME = env("PAYMENT_BANK_NAME", default="")
+PAYMENT_BANK_ACCOUNT_NUMBER = env("PAYMENT_BANK_ACCOUNT_NUMBER", default="")
+PAYMENT_BANK_ACCOUNT_NAME = env("PAYMENT_BANK_ACCOUNT_NAME", default="")
+# Optional PromptPay ID (mobile number or 13-digit tax ID). When set, the Pay
+# screen shows a QR with the exact amount; otherwise the static club poster.
+PROMPTPAY_ID = env("PROMPTPAY_ID", default="")
+
+PAYMENT_INTENT_TTL_HOURS = 24
+SLIP_MAX_BYTES = 4 * 1024 * 1024  # EasySlip limit is 4 MB
+SLIP_MAX_UPLOADS_PER_INTENT = 5
+# A slip dated earlier than this before checkout started is sent to staff review.
+SLIP_DATE_GRACE_MINUTES = 30
+
+# EasySlip v2. Modes: "live" (real API), "off" (every slip goes to staff
+# review), "fake" (auto-approve, local development only; refused in production).
+EASYSLIP_API_KEY = env("EASYSLIP_API_KEY", default="")
+EASYSLIP_MODE = env("EASYSLIP_MODE", default="") or ("live" if EASYSLIP_API_KEY else "off")
+if EASYSLIP_MODE not in {"live", "off", "fake"}:
+    raise ImproperlyConfigured(f"EASYSLIP_MODE must be live, off or fake (got {EASYSLIP_MODE!r})")
+EASYSLIP_URL = "https://api.easyslip.com/v2/verify/bank"
+EASYSLIP_TIMEOUT_SECONDS = 20
+
+# Telegram alerts to the staff group. Empty token disables sending.
+TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")
+TELEGRAM_CHAT_ID = env("TELEGRAM_CHAT_ID", default="")
+TELEGRAM_TIMEOUT_SECONDS = 15
 
 # Django Admin path (superuser only). Set a hard-to-guess value in production.
 ADMIN_URL = env("DJANGO_ADMIN_URL", default="admin/")

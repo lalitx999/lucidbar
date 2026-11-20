@@ -13,6 +13,10 @@ EMAIL_BACKEND = env("EMAIL_BACKEND", default="") or "django.core.mail.backends.c
 # Serve static files straight from STATICFILES_DIRS without collectstatic.
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "private": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": PRIVATE_MEDIA_ROOT, "base_url": None},  # noqa: F405
+    },
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
 WHITENOISE_USE_FINDERS = True

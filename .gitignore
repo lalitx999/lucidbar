@@ -13,6 +13,7 @@ __pycache__/
 # Django
 /staticfiles/
 /media/
+/private/
 
 # Source download kept outside the app (vendored copy lives in static/vendor/)
 /bootstrap-5.3.8-dist/

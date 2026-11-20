@@ -7,6 +7,8 @@ from datetime import date
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+from apps.memberships.services import membership_service
+
 from ..models import EmailOTP, Member
 from . import otp_service
 
@@ -72,8 +74,8 @@ def verify_email(member: Member, code: str) -> Member:
     """
     Confirm the registration code and activate the member.
 
-    Raises otp_service.OTPError on a bad code. Later phases hook the Bronze
-    membership and signup keys into this transaction.
+    Raises otp_service.OTPError on a bad code. Activation and the free
+    signup membership happen in one transaction.
     """
     # verify() commits on its own: a failed attempt must be recorded even
     # though it raises, so it must not run inside an outer transaction.
@@ -82,4 +84,5 @@ def verify_email(member: Member, code: str) -> Member:
         member.status = Member.Status.ACTIVE
         member.email_verified_at = timezone.now()
         member.save(update_fields=["status", "email_verified_at", "updated_at"])
+        membership_service.grant_signup_membership(member)
     return member
