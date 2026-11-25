@@ -312,6 +312,6 @@ Phases 0 to 3 give the core loop (register, pay, earn keys, redeem) and are the 
 3. **Prices and keys per tier**: confirm Bronze free / 2 keys, Gold 499 THB / 10 keys, Obsidian 990 THB / 30 keys, monthly.
 4. **Membership expiry**: when a monthly Seal ends, does the member drop to Bronze automatically?
 5. **Wheel prize weights**: are all 12 segments equally likely, or should high-value prizes be rarer?
-6. **Slip retention**: how long to keep slip images (for example 12 months) before deleting.
-7. **Fonts**: Cinzel and Montserrat (both free under the SIL Open Font License) need their woff2 files added to `static/fonts/`. They can be downloaded once and committed.
+6. **Slip retention**: how long to keep slip images before deleting. Implemented as `SLIP_RETENTION_DAYS` (default 365); confirm the number.
+7. **Fonts**: done. Cinzel and Montserrat (Latin subsets, OFL) are in `static/fonts/`.
 8. **Thai language**: add in a later phase after English is complete?

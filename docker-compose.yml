@@ -1,6 +1,6 @@
 # Local development stack: PostgreSQL, Redis, Django dev server, Celery worker.
 # Usage: cp .env.example .env  (then edit)  &&  docker compose up --build
-# The production stack (Nginx, Gunicorn, beat, backups) arrives in Phase 8.
+# Production uses docker-compose.prod.yml instead (see deploy/DEPLOY.md).
 
 x-app: &app
   build:

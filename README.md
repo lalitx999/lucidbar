@@ -31,6 +31,10 @@ print in the runserver console and no worker is needed. To test with a real work
 
 Docker is used for the VPS deployment, not for local development.
 
+**Production:** follow [deploy/DEPLOY.md](deploy/DEPLOY.md). It covers server hardening, the
+`docker-compose.prod.yml` stack (Nginx, Gunicorn, Celery worker and beat, PostgreSQL, Redis, certbot,
+nightly backups), TLS, accounts (`manage.py create_staff`), updates, and restore.
+
 ### Compose file
 
 ```bash

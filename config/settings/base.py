@@ -8,6 +8,7 @@ variables (loaded from `.env` by django-environ). Nothing secret is hardcoded.
 from pathlib import Path
 
 import environ
+from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -186,6 +187,20 @@ CELERY_TASK_TIME_LIMIT = 120
 CELERY_TASK_SOFT_TIME_LIMIT = 90
 CELERY_TIMEZONE = TIME_ZONE
 
+# Housekeeping run by Celery Beat (the "beat" container in production).
+CELERY_BEAT_SCHEDULE = {
+    "expire-unpaid-checkouts": {"task": "apps.core.tasks.expire_unpaid_checkouts", "schedule": 15 * 60},
+    "purge-old-slip-images": {
+        "task": "apps.core.tasks.purge_old_slip_images",
+        "schedule": crontab(hour=4, minute=0),
+    },
+    "purge-old-otps": {"task": "apps.core.tasks.purge_old_otps", "schedule": crontab(hour=4, minute=15)},
+    "clear-expired-sessions": {
+        "task": "apps.core.tasks.clear_expired_sessions",
+        "schedule": crontab(hour=4, minute=30),
+    },
+}
+
 # ---------------------------------------------------------------------------
 # Email (Hostinger SMTP)
 # ---------------------------------------------------------------------------
@@ -209,6 +224,11 @@ CSRF_COOKIE_SAMESITE = "Lax"
 X_FRAME_OPTIONS = "DENY"
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+PERMISSIONS_POLICY = (
+    "camera=(self), microphone=(), geolocation=(), payment=(), usb=(), "
+    "magnetometer=(), gyroscope=(), accelerometer=(), browsing-topics=()"
+)
 
 # Content-Security-Policy: everything from our own origin only (no CDN).
 CSP_POLICY = (
@@ -239,6 +259,8 @@ LOGGING = {
     },
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+# Same server error reported to Telegram at most once per this many seconds.
+ERROR_ALERT_COOLDOWN_SECONDS = 600
 
 # ---------------------------------------------------------------------------
 # Site settings exposed to templates
@@ -262,6 +284,13 @@ SLIP_MAX_BYTES = 4 * 1024 * 1024  # EasySlip limit is 4 MB
 SLIP_MAX_UPLOADS_PER_INTENT = 5
 # A slip dated earlier than this before checkout started is sent to staff review.
 SLIP_DATE_GRACE_MINUTES = 30
+# Slip images are personal data (PDPA). After this many days the image file of
+# a finished payment is deleted; the payment record and bank reference stay.
+SLIP_RETENTION_DAYS = env.int("SLIP_RETENTION_DAYS", default=365)
+
+# Abuse limits per member (fixed one-hour window, Redis cache).
+CHECKOUTS_PER_HOUR = 10
+BOOKING_REQUESTS_PER_HOUR = 10
 
 # EasySlip v2. Modes: "live" (real API), "off" (every slip goes to staff
 # review), "fake" (auto-approve, local development only; refused in production).

@@ -13,9 +13,13 @@ class ContentSecurityPolicyMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         self.policy = getattr(settings, "CSP_POLICY", "")
+        self.permissions = getattr(settings, "PERMISSIONS_POLICY", "")
 
     def __call__(self, request):
         response = self.get_response(request)
         if self.policy and "Content-Security-Policy" not in response:
             response["Content-Security-Policy"] = self.policy
+        # Browser features the site may use: only the camera, for door scanning.
+        if self.permissions and "Permissions-Policy" not in response:
+            response["Permissions-Policy"] = self.permissions
         return response

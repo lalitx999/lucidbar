@@ -45,4 +45,5 @@ def staff_intent_or_404(reference: str) -> PaymentIntent:
 
 
 def slip_or_404(slip_id: int) -> PaymentSlip:
-    return get_object_or_404(PaymentSlip.objects.select_related("intent"), pk=slip_id)
+    # Images older than SLIP_RETENTION_DAYS are deleted; treat those as gone.
+    return get_object_or_404(PaymentSlip.objects.select_related("intent").exclude(image=""), pk=slip_id)

@@ -24,6 +24,12 @@ else:
     sys.exit("PostgreSQL is not reachable.")
 PY
 
+# The web container refreshes the shared static volume on every start, so a
+# new image always serves its own CSS/JS (Nginx reads the same volume).
+if [ "${DJANGO_COLLECTSTATIC:-0}" = "1" ]; then
+  python manage.py collectstatic --noinput --verbosity 0
+fi
+
 if [ "${DJANGO_AUTO_MIGRATE:-0}" = "1" ]; then
   python manage.py migrate --noinput
 fi

@@ -25,9 +25,21 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = False
 
 LOGGING["root"]["level"] = env("DJANGO_LOG_LEVEL", default="INFO")  # noqa: F405
+# Server errors also go to the staff Telegram chat (rate limited, no personal data).
+LOGGING["handlers"]["telegram"] = {  # noqa: F405
+    "class": "apps.notifications.logging.TelegramErrorHandler",
+    "level": "ERROR",
+}
+LOGGING["root"]["handlers"] = ["console", "telegram"]  # noqa: F405
 
 # HSTS preload is a long-term commitment for the whole domain; opt in deliberately later.
 SILENCED_SYSTEM_CHECKS = ["security.W021"]
+
+# Refuse to start with placeholder secrets or the default admin path.
+if len(SECRET_KEY) < 40 or SECRET_KEY.startswith(("change-me", "django-insecure")):  # noqa: F405
+    raise ImproperlyConfigured("Set a long random DJANGO_SECRET_KEY for production.")
+if ADMIN_URL.strip("/") == "admin":  # noqa: F405
+    raise ImproperlyConfigured("Set DJANGO_ADMIN_URL to a hard-to-guess path in production.")
 
 # Fake slip approval is a local development aid only.
 if EASYSLIP_MODE == "fake":  # noqa: F405

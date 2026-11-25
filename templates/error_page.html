@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load i18n static %}
+{% comment %}
+  Shared layout for the error pages. 500.html is rendered without context
+  processors, so it must not rely on request data or the database.
+{% endcomment %}
+
+{% block title %}Lucid Society{% endblock %}
+
+{% block body %}
+<main class="offline-screen">
+  <div class="d-flex flex-column align-items-center gap-3 text-center">
+    <img src="{% static 'img/logo-256.png' %}" alt="" class="brand-logo" width="96" height="96">
+    <span class="eyebrow text-gold">{% block code_value %}{% endblock %}</span>
+    <h1 class="font-display fs-4 text-uppercase tracking-wide mb-0">{% block heading %}{% endblock %}</h1>
+    <p class="text-muted-lucid mb-0">{% block message %}{% endblock %}</p>
+    <a href="/" class="btn btn-lucid mt-2">{% translate "Return to Lucid" %}</a>
+  </div>
+</main>
+{% endblock %}

@@ -128,3 +128,10 @@ def verify(member: Member, purpose: str, code: str) -> None:
         raise OTPError(_("Too many incorrect attempts. Please request a new code."))
     remaining = settings.OTP_MAX_ATTEMPTS - otp.attempts
     raise OTPError(_("Incorrect code. %(remaining)d attempts left.") % {"remaining": remaining})
+
+
+def purge_old_codes(days: int = 1) -> int:
+    """Delete one-time codes that expired more than `days` ago (hashes only, but no reason to keep them)."""
+    cutoff = timezone.now() - timedelta(days=days)
+    deleted, _ = EmailOTP.objects.filter(expires_at__lt=cutoff).delete()
+    return deleted

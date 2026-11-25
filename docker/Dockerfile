@@ -18,10 +18,14 @@ COPY requirements/ requirements/
 RUN pip install -r ${REQUIREMENTS}
 
 COPY --chown=app:app . .
-RUN chmod +x docker/entrypoint.sh
+RUN chmod +x docker/entrypoint.sh \
+    # Mount points for named volumes. Docker copies this ownership into a new
+    # volume, so the non-root app user can write static files and uploads.
+    && mkdir -p /app/staticfiles /data/media /data/private \
+    && chown app:app /app/staticfiles /data/media /data/private
 
 USER app
 
 EXPOSE 8000
 ENTRYPOINT ["docker/entrypoint.sh"]
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--access-logfile", "-"]
+CMD ["gunicorn", "config.wsgi:application", "--config", "docker/gunicorn.conf.py"]

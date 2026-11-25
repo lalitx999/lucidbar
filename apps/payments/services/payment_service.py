@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from apps.audit.services import audit_service
+from apps.core import ratelimit
 from apps.memberships.models import SealTier
 from apps.memberships.services import membership_service
 from apps.whispers.models import Whisper
@@ -63,6 +64,8 @@ def start_checkout(member, tier: SealTier) -> PaymentIntent:
     """
     if tier.is_free or not tier.is_active:
         raise PaymentError(_("This seal cannot be purchased."))
+    if ratelimit.hit("checkout", member.pk, 3600) > settings.CHECKOUTS_PER_HOUR:
+        raise PaymentError(_("Too many checkout attempts. Please try again in an hour."))
 
     with transaction.atomic():
         open_intent = (
@@ -274,3 +277,33 @@ def staff_reject(intent: PaymentIntent, staff, reason: str, allow_new_slip: bool
             intent.status_message,
             kind=Whisper.Kind.PAYMENT,
         )
+
+
+# ---------------------------------------------------------------------------
+# Housekeeping (Celery Beat)
+# ---------------------------------------------------------------------------
+def expire_due_intents() -> int:
+    """Expire every unpaid checkout past its deadline in one UPDATE."""
+    now = timezone.now()
+    return PaymentIntent.objects.filter(status=PaymentIntent.Status.AWAITING_SLIP, expires_at__lte=now).update(
+        status=PaymentIntent.Status.EXPIRED, updated_at=now
+    )
+
+
+def purge_old_slip_images(batch_size: int = 200) -> int:
+    """
+    Delete slip image files older than SLIP_RETENTION_DAYS once the payment is
+    finished. Records and bank references are kept for accounting; only the
+    picture (personal data) goes. Open payments are never touched.
+    """
+    cutoff = timezone.now() - timedelta(days=settings.SLIP_RETENTION_DAYS)
+    slips = list(
+        PaymentSlip.objects.filter(created_at__lt=cutoff)
+        .exclude(image="")
+        .exclude(intent__status__in=PaymentIntent.OPEN_STATUSES)
+        .only("pk", "image")[:batch_size]
+    )
+    for slip in slips:
+        slip.image.storage.delete(slip.image.name)
+    PaymentSlip.objects.filter(pk__in=[s.pk for s in slips]).update(image="")
+    return len(slips)

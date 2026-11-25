@@ -11,6 +11,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
+from apps.core import ratelimit
 from apps.core.clock import business_night, night_start
 from apps.whispers.models import Whisper
 from apps.whispers.services import whisper_service
@@ -54,6 +55,8 @@ def request_booking(member, *, night: dt.date, time_slot: str, area: str, guests
         raise BookingError(_("Bookings open %(days)d days ahead.") % {"days": settings.BOOKING_MAX_DAYS_AHEAD})
     if not 1 <= guests <= settings.BOOKING_MAX_GUESTS:
         raise BookingError(_("Guests must be between 1 and %(max)d.") % {"max": settings.BOOKING_MAX_GUESTS})
+    if ratelimit.hit("booking", member.pk, 3600) > settings.BOOKING_REQUESTS_PER_HOUR:
+        raise BookingError(_("Too many requests. Please try again in an hour."))
 
     with transaction.atomic():
         # Lock the member row so two quick requests cannot both pass the limit.

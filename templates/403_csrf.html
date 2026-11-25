@@ -1,0 +1,4 @@
+{% extends "error_page.html" %}{% load i18n %}
+{% block code_value %}403{% endblock %}
+{% block heading %}{% translate "Please try again" %}{% endblock %}
+{% block message %}{% translate "The form expired or was opened in another tab. Go back, reload the page and send it again." %}{% endblock %}

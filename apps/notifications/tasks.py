@@ -187,3 +187,9 @@ def notify_booking(booking_id: int, event: str) -> None:
     if booking.note:
         lines.append(f"Request: {escape(booking.note)}")
     telegram.send_message("\n".join(lines))
+
+
+@shared_task(ignore_result=True, max_retries=0)
+def notify_error(summary: str) -> None:
+    """Server error alert for the staff chat (sent by TelegramErrorHandler)."""
+    telegram.send_message(f"<b>Server error</b>\n<pre>{escape(summary)}</pre>")

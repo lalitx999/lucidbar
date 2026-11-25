@@ -50,7 +50,11 @@
         <span class="small text-muted-lucid">{{ slip.created_at|date:"j M Y H:i" }}</span>
         <span class="status-pill status-{{ slip.status }}">{{ slip.get_status_display }}</span>
       </div>
+      {% if slip.image %}
       <img src="{% url 'dashboard:slip_image' slip.pk %}" alt="{% translate 'Uploaded slip' %}" class="slip-preview" loading="lazy">
+      {% else %}
+      <p class="small text-faint mb-0">{% translate "Image deleted under the slip retention policy." %}</p>
+      {% endif %}
       <dl class="identity-facts mb-0">
         <div><dt>{% translate "Bank ref" %}</dt><dd class="font-monospace">{{ slip.trans_ref|default:"-" }}</dd></div>
         <div><dt>{% translate "Slip amount" %}</dt><dd>{% if slip.slip_amount_satang is not None %}{% widthratio slip.slip_amount_satang 100 1 %} THB{% else %}-{% endif %}</dd></div>
