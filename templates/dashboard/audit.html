@@ -1,0 +1,45 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Audit log" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3 mb-3">
+  <h1 class="font-display fs-4 text-uppercase tracking-wide mb-0">{% translate "Audit log" %}</h1>
+  <form method="get" class="d-flex gap-2">
+    <select name="type" class="form-select lucid-input" aria-label="{% translate 'Action type' %}">
+      <option value="">{% translate "All actions" %}</option>
+      {% for p in prefixes %}<option value="{{ p }}"{% if p == prefix %} selected{% endif %}>{{ p }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn btn-outline-gold">{% translate "Filter" %}</button>
+  </form>
+</div>
+
+{% if page.object_list %}
+<div class="table-responsive">
+  <table class="table dash-table align-middle">
+    <thead><tr><th>{% translate "When" %}</th><th>{% translate "Who" %}</th><th>{% translate "Action" %}</th><th>{% translate "Target" %}</th><th>{% translate "Details" %}</th></tr></thead>
+    <tbody>
+      {% for a in page.object_list %}
+      <tr>
+        <td class="text-nowrap">{{ a.created_at|date:"j M Y H:i" }}</td>
+        <td>{{ a.actor.full_name }}</td>
+        <td class="font-monospace">{{ a.action }}</td>
+        <td>{% if a.target_type == "accounts.member" %}<a href="{% url 'dashboard:member_detail' a.target_id %}" class="link-gold">{{ a.target_label }}</a>{% else %}{{ a.target_label }}{% endif %}</td>
+        <td class="audit-details">{% for k, v in a.details.items %}{{ k }}: {{ v }}{% if not forloop.last %}; {% endif %}{% endfor %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if page.has_other_pages %}
+<nav class="d-flex gap-3 align-items-center small">
+  {% if page.has_previous %}<a href="?type={{ prefix }}&amp;page={{ page.previous_page_number }}" class="link-gold">{% translate "Newer" %}</a>{% endif %}
+  <span class="text-muted-lucid">{% blocktranslate with n=page.number total=page.paginator.num_pages %}Page {{ n }} of {{ total }}{% endblocktranslate %}</span>
+  {% if page.has_next %}<a href="?type={{ prefix }}&amp;page={{ page.next_page_number }}" class="link-gold">{% translate "Older" %}</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+<p class="text-muted-lucid">{% translate "Nothing recorded yet." %}</p>
+{% endif %}
+{% endblock %}

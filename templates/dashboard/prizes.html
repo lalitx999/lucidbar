@@ -1,0 +1,30 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Wheel prizes" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+{% include "dashboard/partials/settings_tabs.html" with tab="prizes" %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <p class="small text-muted-lucid mb-0">{% translate "The wheel shows active prizes in sort order (2 to 24). Weight sets the chance; 0 keeps a prize on the wheel but it never wins." %}</p>
+  <a href="{% url 'dashboard:prize_new' %}" class="btn btn-sm btn-outline-gold">{% translate "Add prize" %}</a>
+</div>
+<div class="table-responsive">
+  <table class="table dash-table align-middle">
+    <thead><tr><th>#</th><th>{% translate "Prize" %}</th><th>{% translate "Value" %}</th><th class="text-end">{% translate "Weight" %}</th><th class="text-end">{% translate "Chance" %}</th><th>{% translate "Status" %}</th><th></th></tr></thead>
+    <tbody>
+      {% for p in prizes %}
+      <tr>
+        <td class="text-muted-lucid">{{ p.sort_order }}</td>
+        <td>{{ p.label }}{% if p.description %}<div class="small text-muted-lucid">{{ p.description }}</div>{% endif %}</td>
+        <td>{{ p.value_text|default:"-" }}</td>
+        <td class="text-end">{{ p.weight }}</td>
+        <td class="text-end">{% if p.is_active %}{{ p.chance }}%{% else %}-{% endif %}</td>
+        <td>{% if p.is_active %}{% translate "On the wheel" %}{% else %}<span class="text-muted-lucid">{% translate "Off" %}</span>{% endif %}</td>
+        <td class="text-end"><a href="{% url 'dashboard:prize_edit' p.pk %}" class="btn btn-sm btn-outline-gold">{% translate "Edit" %}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

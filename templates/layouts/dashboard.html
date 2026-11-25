@@ -1,20 +1,27 @@
 {% extends "base.html" %}
 {% load static i18n %}
-{% comment %} Staff dashboard layout: same theme, wider page for tablets and desktops. {% endcomment %}
+{% comment %} Staff dashboard layout: same theme, wider page for tablets and desktops. Manager links only show for managers. {% endcomment %}
 
 {% block body %}
 <div class="dash-shell">
-  <nav class="dash-nav">
+  <nav class="dash-nav" aria-label="{% translate 'Staff navigation' %}">
     <a href="{% url 'dashboard:home' %}" class="d-flex align-items-center gap-2 me-auto text-white">
       <img src="{% static 'img/logo-256.png' %}" alt="" class="brand-logo brand-logo-sm" width="32" height="32">
       <span class="font-display">{% translate "Lucid Staff" %}</span>
     </a>
+    {% if is_manager %}<a href="{% url 'dashboard:overview' %}" class="{% if section == 'overview' %}active{% endif %}">{% translate "Overview" %}</a>{% endif %}
     <a href="{% url 'dashboard:door' %}" class="{% if section == 'door' %}active{% endif %}">{% translate "Door" %}</a>
     <a href="{% url 'dashboard:bookings' %}" class="{% if section == 'bookings' %}active{% endif %}">{% translate "Bookings" %}</a>
-    <a href="{% url 'dashboard:payments' %}" class="{% if section == 'payments' %}active{% endif %}">{% translate "Payments" %}</a>
-    <a href="{% url 'dashboard:redemptions' %}" class="{% if section == 'redemptions' %}active{% endif %}">{% translate "Treasures" %}</a>
+    <a href="{% url 'dashboard:redemptions' %}" class="{% if section == 'redemptions' %}active{% endif %}">{% translate "Hand-over" %}</a>
     <a href="{% url 'dashboard:reveal' %}" class="{% if section == 'reveal' %}active{% endif %}">{% translate "Reveal" %}</a>
+    {% if is_manager %}
+    <a href="{% url 'dashboard:payments' %}" class="{% if section == 'payments' %}active{% endif %}">{% translate "Payments" %}</a>
+    <a href="{% url 'dashboard:members' %}" class="{% if section == 'members' %}active{% endif %}">{% translate "Members" %}</a>
+    <a href="{% url 'dashboard:catalog' %}" class="{% if section == 'catalog' %}active{% endif %}">{% translate "Catalogue" %}</a>
+    <a href="{% url 'dashboard:tiers' %}" class="{% if section == 'settings' %}active{% endif %}">{% translate "Seals and wheel" %}</a>
     <a href="{% url 'dashboard:broadcasts' %}" class="{% if section == 'broadcasts' %}active{% endif %}">{% translate "Broadcasts" %}</a>
+    <a href="{% url 'dashboard:audit' %}" class="{% if section == 'audit' %}active{% endif %}">{% translate "Audit" %}</a>
+    {% endif %}
     <form method="post" action="{% url 'accounts:logout' %}" class="m-0">
       {% csrf_token %}
       <button type="submit" class="btn btn-link btn-link-gold text-muted-lucid">{% translate "Sign out" %}</button>

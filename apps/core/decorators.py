@@ -52,9 +52,14 @@ MANAGER_GROUP = "Manager"
 
 
 def is_manager(user) -> bool:
+    """Cached on the user object, so the decorator and the nav share one query per request."""
     if not (user.is_authenticated and user.is_active and user.is_staff):
         return False
-    return user.is_superuser or user.groups.filter(name=MANAGER_GROUP).exists()
+    cached = getattr(user, "_lucid_is_manager", None)
+    if cached is None:
+        cached = user.is_superuser or user.groups.filter(name=MANAGER_GROUP).exists()
+        user._lucid_is_manager = cached
+    return cached
 
 
 def manager_required(view_func):

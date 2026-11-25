@@ -15,6 +15,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
+from apps.audit.services import audit_service
 from apps.memberships.models import SealTier
 from apps.memberships.services import membership_service
 from apps.whispers.models import Whisper
@@ -237,6 +238,9 @@ def staff_approve(intent: PaymentIntent, staff, trans_ref: str = "") -> None:
             except IntegrityError:
                 raise PaymentError(_("That bank reference is already used by another payment.")) from None
         _approve(intent, by=staff)
+        audit_service.record(
+            staff, "payment.approve", intent.member, reference=intent.reference, trans_ref=trans_ref.strip()
+        )
         transaction.on_commit(lambda: notify_payment.delay(intent.pk, "approved"))
 
 
@@ -256,6 +260,14 @@ def staff_reject(intent: PaymentIntent, staff, reason: str, allow_new_slip: bool
             # Give the member a fresh window to upload a correct slip.
             intent.expires_at = timezone.now() + timedelta(hours=settings.PAYMENT_INTENT_TTL_HOURS)
         intent.save(update_fields=["status", "status_message", "decided_by", "decided_at", "expires_at", "updated_at"])
+        audit_service.record(
+            staff,
+            "payment.reject",
+            intent.member,
+            reference=intent.reference,
+            reason=reason,
+            allow_new_slip=allow_new_slip,
+        )
         whisper_service.send(
             intent.member,
             _("Payment %(ref)s not accepted") % {"ref": intent.reference},

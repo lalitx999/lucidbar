@@ -33,8 +33,31 @@ def test_dashboard_requires_staff(client, make_member, review_intent):
     assert client.get(reverse("dashboard:slip_image", args=[slip.pk])).status_code == 403
 
 
-def test_queue_lists_payments_under_review(client, staff_user, review_intent, django_assert_max_num_queries):
+def test_plain_staff_cannot_see_or_decide_payments(client, staff_user, review_intent):
     client.force_login(staff_user)
+    slip = review_intent.slips.get()
+
+    assert client.get(reverse("dashboard:payments")).status_code == 403
+    assert client.get(reverse("dashboard:slip_image", args=[slip.pk])).status_code == 403
+    assert client.post(reverse("dashboard:payment_approve", args=[review_intent.reference])).status_code == 403
+    review_intent.refresh_from_db()
+    assert review_intent.status == PaymentIntent.Status.REVIEW
+
+
+def test_approval_is_audited(client, manager_user, review_intent):
+    from apps.audit.models import AuditEntry
+
+    client.force_login(manager_user)
+    with mock.patch("apps.notifications.tasks.telegram"):
+        client.post(reverse("dashboard:payment_approve", args=[review_intent.reference]))
+
+    entry = AuditEntry.objects.get(action="payment.approve")
+    assert entry.actor == manager_user
+    assert entry.details["reference"] == review_intent.reference
+
+
+def test_queue_lists_payments_under_review(client, manager_user, review_intent, django_assert_max_num_queries):
+    client.force_login(manager_user)
 
     with django_assert_max_num_queries(5):
         html = client.get(reverse("dashboard:payments")).content.decode()
@@ -42,8 +65,8 @@ def test_queue_lists_payments_under_review(client, staff_user, review_intent, dj
     assert review_intent.reference in html
 
 
-def test_staff_can_view_slip_image_privately(client, staff_user, review_intent):
-    client.force_login(staff_user)
+def test_manager_can_view_slip_image_privately(client, manager_user, review_intent):
+    client.force_login(manager_user)
     slip = review_intent.slips.get()
 
     response = client.get(reverse("dashboard:slip_image", args=[slip.pk]))
@@ -53,21 +76,21 @@ def test_staff_can_view_slip_image_privately(client, staff_user, review_intent):
     assert "no-store" in response["Cache-Control"]
 
 
-def test_staff_approve_grants_membership(client, staff_user, review_intent):
-    client.force_login(staff_user)
+def test_manager_approve_grants_membership(client, manager_user, review_intent):
+    client.force_login(manager_user)
 
     with mock.patch("apps.notifications.tasks.telegram"):
         client.post(reverse("dashboard:payment_approve", args=[review_intent.reference]), {"trans_ref": "BANK1"})
 
     review_intent.refresh_from_db()
     assert review_intent.status == PaymentIntent.Status.APPROVED
-    assert review_intent.decided_by == staff_user
+    assert review_intent.decided_by == manager_user
     assert review_intent.slips.get().trans_ref == "BANK1"
     assert Membership.objects.filter(member=review_intent.member, source="payment").exists()
 
 
-def test_staff_reject_lets_member_try_again(client, staff_user, review_intent):
-    client.force_login(staff_user)
+def test_manager_reject_lets_member_try_again(client, manager_user, review_intent):
+    client.force_login(manager_user)
 
     client.post(
         reverse("dashboard:payment_reject", args=[review_intent.reference]),
@@ -80,8 +103,8 @@ def test_staff_reject_lets_member_try_again(client, staff_user, review_intent):
     assert review_intent.slips.get().status == PaymentSlip.Status.REJECTED
 
 
-def test_staff_reject_final(client, staff_user, review_intent):
-    client.force_login(staff_user)
+def test_manager_reject_final(client, manager_user, review_intent):
+    client.force_login(manager_user)
 
     client.post(reverse("dashboard:payment_reject", args=[review_intent.reference]), {"reason": "Fraud suspected"})
 
@@ -89,8 +112,8 @@ def test_staff_reject_final(client, staff_user, review_intent):
     assert review_intent.status == PaymentIntent.Status.REJECTED
 
 
-def test_cannot_approve_twice(client, staff_user, review_intent):
-    client.force_login(staff_user)
+def test_cannot_approve_twice(client, manager_user, review_intent):
+    client.force_login(manager_user)
     with mock.patch("apps.notifications.tasks.telegram"):
         client.post(reverse("dashboard:payment_approve", args=[review_intent.reference]))
         client.post(reverse("dashboard:payment_approve", args=[review_intent.reference]))

@@ -1,0 +1,5 @@
+{% load i18n %}
+<div class="d-flex gap-3 mt-3 mb-3">
+  <a href="{% url 'dashboard:tiers' %}" class="font-display fs-5 text-uppercase tracking-wide {% if tab == 'tiers' %}text-gold{% else %}text-muted-lucid{% endif %} text-decoration-none">{% translate "Seal tiers" %}</a>
+  <a href="{% url 'dashboard:prizes' %}" class="font-display fs-5 text-uppercase tracking-wide {% if tab == 'prizes' %}text-gold{% else %}text-muted-lucid{% endif %} text-decoration-none">{% translate "Wheel prizes" %}</a>
+</div>

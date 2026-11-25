@@ -3,6 +3,8 @@
 from django.db import transaction
 from django.utils import timezone
 
+from apps.audit.services import audit_service
+
 from ..models import Broadcast, Whisper
 
 BATCH_SIZE = 500
@@ -23,6 +25,7 @@ def create_broadcast(title: str, body: str, audience: str, staff) -> Broadcast:
 
     with transaction.atomic():
         broadcast = Broadcast.objects.create(title=title, body=body, audience=audience, sent_by=staff)
+        audit_service.record(staff, "broadcast.send", broadcast, audience=audience, title=title)
         transaction.on_commit(lambda: fan_out_broadcast.delay(broadcast.pk))
     return broadcast
 

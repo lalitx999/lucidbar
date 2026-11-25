@@ -60,3 +60,30 @@ class KeysEntry(models.Model):
 
     def __str__(self):
         return f"{self.delta:+d} {self.reason}"
+
+
+class Spending(models.Model):
+    """
+    A bill the member paid at the club, recorded by staff. Keys are earned
+    from it through the ledger (reference "spending:<pk>"). The form nonce
+    makes a double-submitted form record the bill only once.
+    """
+
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="spendings")
+    amount_satang = models.PositiveIntegerField()
+    keys_awarded = models.PositiveIntegerField(default=0)
+    note = models.CharField(max_length=120, blank=True)
+    nonce = models.UUIDField(unique=True)
+    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        constraints = [models.CheckConstraint(condition=Q(amount_satang__gt=0), name="spending_amount_positive")]
+
+    def __str__(self):
+        return f"{self.member_id} {self.amount_satang}"
+
+    @property
+    def amount_thb(self):
+        return self.amount_satang / 100

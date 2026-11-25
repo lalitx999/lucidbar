@@ -1,8 +1,7 @@
 """
-Custom staff dashboard (not Django Admin). Every view is guarded by
-@staff_required (or @manager_required for manager-only actions).
-Sections: door check-in, bookings, payments, treasure hand-over, the Reveal,
-broadcasts.
+Day-to-day dashboard pages (not Django Admin). Staff: door check-in and
+spending, bookings, treasure and prize hand-over, the Reveal page.
+Manager only: payments and slips, the weekly draw, broadcasts.
 """
 
 from django.contrib import messages
@@ -15,12 +14,14 @@ from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods, require_POST, require_safe
 
+from apps.accounts.selectors import member_selector
 from apps.bookings.forms import StaffConfirmForm, StaffDeclineForm
 from apps.bookings.selectors import booking_selector
 from apps.bookings.services import booking_service
 from apps.checkin.selectors import checkin_selector
 from apps.checkin.services import checkin_service
 from apps.core.decorators import is_manager, manager_required, staff_required
+from apps.keys.services import spending_service
 from apps.memberships.selectors import membership_selector
 from apps.payments.forms import StaffApproveForm, StaffRejectForm
 from apps.payments.selectors import payment_selector
@@ -33,12 +34,14 @@ from apps.whispers.forms import BroadcastForm
 from apps.whispers.selectors import whisper_selector
 from apps.whispers.services import whisper_service
 
+from ..forms import SpendingForm
+
 
 @never_cache
 @staff_required
 @require_safe
 def home(request):
-    return redirect("dashboard:door")
+    return redirect("dashboard:overview" if is_manager(request.user) else "dashboard:door")
 
 
 # ---------------------------------------------------------------------------
@@ -54,6 +57,7 @@ def door(request):
         "last_membership": membership_selector.current_membership(last.member) if last else None,
         "last_booking": booking_selector.tonight_for_member(last.member) if last else None,
         "tonight": checkin_selector.tonight(),
+        "spending_form": SpendingForm() if last else None,
         "section": "door",
     }
     return render(request, "dashboard/door.html", context)
@@ -81,6 +85,46 @@ def door_scan(request):
             % {"name": checkin.member.full_name, "time": date_format(localtime(checkin.created_at), "H:i")},
         )
     return redirect(f"{reverse('dashboard:door')}?last={checkin.pk}")
+
+
+@staff_required
+@require_POST
+def member_spending(request, member_id):
+    """Record a bill for a member. Used from the door page and the member page."""
+    member = member_selector.member_for_staff_or_404(member_id)
+    back = request.POST.get("back", "")
+    form = SpendingForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, _("Please enter the bill amount in THB."))
+    else:
+        try:
+            spending, created = spending_service.record(
+                member,
+                form.amount_satang,
+                request.user,
+                nonce=form.cleaned_data["nonce"],
+                note=form.cleaned_data["note"],
+            )
+        except spending_service.SpendingError as exc:
+            messages.error(request, str(exc))
+        else:
+            if created:
+                messages.success(
+                    request,
+                    _("%(amount)s THB recorded for %(name)s. %(keys)d keys awarded.")
+                    % {
+                        "amount": f"{spending.amount_satang / 100:,.2f}",
+                        "name": member.full_name,
+                        "keys": spending.keys_awarded,
+                    },
+                )
+            else:
+                messages.warning(request, _("This bill was already recorded."))
+    if back.isdigit() and is_manager(request.user) and int(back) == member.pk:
+        return redirect("dashboard:member_detail", member_id=member.pk)
+    if back.startswith("checkin:") and back[8:].isdigit():
+        return redirect(f"{reverse('dashboard:door')}?last={back[8:]}")
+    return redirect("dashboard:door")
 
 
 # ---------------------------------------------------------------------------
@@ -134,7 +178,7 @@ def booking_decline(request, booking_id):
 
 
 @never_cache
-@staff_required
+@manager_required
 @require_safe
 def payments(request):
     context = {
@@ -146,7 +190,7 @@ def payments(request):
 
 
 @never_cache
-@staff_required
+@manager_required
 @require_safe
 def payment_detail(request, reference):
     context = {
@@ -158,7 +202,7 @@ def payment_detail(request, reference):
     return render(request, "dashboard/payment_detail.html", context)
 
 
-@staff_required
+@manager_required
 @require_POST
 def payment_approve(request, reference):
     intent = payment_selector.staff_intent_or_404(reference)
@@ -173,7 +217,7 @@ def payment_approve(request, reference):
     return redirect("dashboard:payments")
 
 
-@staff_required
+@manager_required
 @require_POST
 def payment_reject(request, reference):
     intent = payment_selector.staff_intent_or_404(reference)
@@ -193,7 +237,7 @@ def payment_reject(request, reference):
 
 
 @never_cache
-@staff_required
+@manager_required
 @require_safe
 def slip_image(request, slip_id):
     """Stream a private slip image to staff. Never cached by browsers or proxies."""

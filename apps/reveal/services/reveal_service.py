@@ -13,6 +13,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
+from apps.audit.services import audit_service
 from apps.whispers.models import Whisper
 from apps.whispers.services import whisper_service
 
@@ -81,6 +82,8 @@ def run_draw(staff) -> ChosenDraw:
             raise RevealError(_("No eligible members to draw from."))
         winner = Member.objects.get(pk=_rng.choice(candidates))
         draw = ChosenDraw.objects.create(epoch=epoch, winner=winner, eligible_count=len(candidates), drawn_by=staff)
+        if staff is not None:
+            audit_service.record(staff, "reveal.draw", winner, epoch=epoch.label, eligible=len(candidates))
         whisper_service.send(
             winner,
             _("You are The Chosen"),

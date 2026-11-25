@@ -1,0 +1,20 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+{% comment %} Shared edit page for tiers, wheel prizes and treasures. {% endcomment %}
+
+{% block title %}{{ title }} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<a href="{% url back %}" class="btn-link-gold text-muted-lucid mt-3">{% translate "Back" %}</a>
+<h1 class="font-display fs-4 text-uppercase tracking-wide mt-2 mb-3">{{ title }}</h1>
+
+<form method="post" class="lucid-card d-flex flex-column gap-3 edit-form" novalidate{% if multipart %} enctype="multipart/form-data"{% endif %}>
+  {% csrf_token %}
+  {% include "partials/form_errors.html" %}
+  {% if current_image %}<img src="{{ current_image.url }}" alt="" class="thumb-md">{% endif %}
+  {% for field in form %}
+    {% include "partials/field.html" with field=field %}
+  {% endfor %}
+  <button type="submit" class="btn btn-lucid">{% translate "Save" %}</button>
+</form>
+{% endblock %}

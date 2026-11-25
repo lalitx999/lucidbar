@@ -1,0 +1,39 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n humanize %}
+
+{% block title %}{% translate "Overview" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mt-3 mb-3">
+  <h1 class="font-display fs-4 text-uppercase tracking-wide mb-0">{% translate "Overview" %}</h1>
+  <span class="small text-muted-lucid">{% blocktranslate with date=report.since|date:"F Y" %}Month figures: {{ date }}{% endblocktranslate %}</span>
+</div>
+
+{% if report.review_queue %}
+<a href="{% url 'dashboard:payments' %}" class="alert alert-warning d-block text-decoration-none mb-4">
+  {% blocktranslate count n=report.review_queue %}{{ n }} payment is waiting for review.{% plural %}{{ n }} payments are waiting for review.{% endblocktranslate %}
+</a>
+{% endif %}
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="lucid-card stat-card"><span class="stat-label">{% translate "Active members" %}</span><span class="stat-value">{{ report.members.active|intcomma }}</span><span class="small text-muted-lucid">{% blocktranslate with n=report.members.new_this_month %}{{ n }} new this month{% endblocktranslate %}</span></div></div>
+  <div class="col-6 col-md-3"><div class="lucid-card stat-card"><span class="stat-label">{% translate "Seal revenue" %}</span><span class="stat-value">{{ report.revenue_thb|floatformat:0|intcomma }}</span><span class="small text-muted-lucid">{% blocktranslate count n=report.payments_count %}THB from {{ n }} payment{% plural %}THB from {{ n }} payments{% endblocktranslate %}</span></div></div>
+  <div class="col-6 col-md-3"><div class="lucid-card stat-card"><span class="stat-label">{% translate "Club spending" %}</span><span class="stat-value">{{ report.spending_thb|floatformat:0|intcomma }}</span><span class="small text-muted-lucid">{% translate "THB recorded by staff" %}</span></div></div>
+  <div class="col-6 col-md-3"><div class="lucid-card stat-card"><span class="stat-label">{% translate "Visits, 7 nights" %}</span><span class="stat-value">{{ report.checkins_7d|intcomma }}</span><span class="small text-muted-lucid">{% translate "door check-ins" %}</span></div></div>
+  <div class="col-6 col-md-3"><div class="lucid-card stat-card"><span class="stat-label">{% translate "Keys issued" %}</span><span class="stat-value">{{ report.keys_issued|intcomma }}</span></div></div>
+  <div class="col-6 col-md-3"><div class="lucid-card stat-card"><span class="stat-label">{% translate "Keys spent" %}</span><span class="stat-value">{{ report.keys_spent|intcomma }}</span></div></div>
+  <div class="col-6 col-md-3"><div class="lucid-card stat-card"><span class="stat-label">{% translate "Treasures unlocked" %}</span><span class="stat-value">{{ report.redemptions_month|intcomma }}</span></div></div>
+  <div class="col-6 col-md-3"><div class="lucid-card stat-card"><span class="stat-label">{% translate "Suspended" %}</span><span class="stat-value">{{ report.members.suspended|intcomma }}</span></div></div>
+</div>
+
+<h2 class="font-display fs-6 text-uppercase tracking-wide mb-3">{% translate "Paid seals held now" %}</h2>
+{% if report.paid_holders %}
+<div class="d-flex flex-wrap gap-3">
+  {% for row in report.paid_holders %}
+  <div class="lucid-card stat-card"><span class="stat-label">{{ row.tier__name }}</span><span class="stat-value">{{ row.n|intcomma }}</span></div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted-lucid">{% translate "Nobody holds a paid seal right now." %}</p>
+{% endif %}
+{% endblock %}

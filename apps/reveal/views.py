@@ -16,6 +16,15 @@ def _wants_json(request):
     return "application/json" in request.headers.get("Accept", "")
 
 
+def _resting_rotation(spin, prizes):
+    if not spin or not prizes:
+        return 0
+    ids = [p.pk for p in prizes]
+    if spin.prize_id not in ids:
+        return 0
+    return wheel.landing_rotation(ids.index(spin.prize_id), len(prizes), 0)
+
+
 @never_cache
 @member_required
 @require_safe
@@ -32,8 +41,9 @@ def reveal_page(request):
         "segments": wheel.segments([p.label for p in prizes]),
         "prizes": prizes,
         "past_spins": reveal_selector.member_spins(request.user),
-        # A finished spin shows the wheel resting on the won segment.
-        "resting_rotation": wheel.landing_rotation(spin.segment_index, len(prizes), 0) if spin and prizes else 0,
+        # A finished spin rests on the won prize. Look it up by prize, not the
+        # stored index, so a manager editing the wheel later does not shift it.
+        "resting_rotation": _resting_rotation(spin, prizes),
         "active_tab": "reveal",
     }
     return render(request, "reveal/reveal.html", context)

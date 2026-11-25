@@ -63,3 +63,24 @@ def _credit_keys(membership: Membership, reason: str) -> None:
             reference=f"membership:{membership.pk}",
             note=membership.tier.name,
         )
+
+
+def grant_staff_membership(member, tier: SealTier, days: int, manager, *, credit_keys: bool = False) -> Membership:
+    """A complimentary period granted by a manager. Starts now; recorded in the audit log."""
+    from apps.audit.services import audit_service
+
+    if days <= 0:
+        raise ValueError("days must be positive")
+    with transaction.atomic():
+        now = timezone.now()
+        membership = Membership.objects.create(
+            member=member,
+            tier=tier,
+            starts_at=now,
+            ends_at=now + timedelta(days=days),
+            source=Membership.Source.STAFF,
+        )
+        if credit_keys:
+            _credit_keys(membership, KeysEntry.Reason.ADMIN_ADJUST)
+        audit_service.record(manager, "membership.grant", member, tier=tier.name, days=days, credit_keys=credit_keys)
+    return membership

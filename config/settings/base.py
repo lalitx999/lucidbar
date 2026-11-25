@@ -30,6 +30,7 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
 ]
 
 LOCAL_APPS = [
@@ -44,6 +45,7 @@ LOCAL_APPS = [
     "apps.reveal",
     "apps.bookings",
     "apps.checkin",
+    "apps.audit",
     "apps.dashboard",
 ]
 
@@ -77,6 +79,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.core.context_processors.site",
                 "apps.core.context_processors.portal",
+                "apps.core.context_processors.staff",
             ],
         },
     },
@@ -282,6 +285,10 @@ BOOKING_MAX_GUESTS = 15
 # identity card stays valid (the member's page refreshes it before then).
 CHECKIN_KEYS = 5
 CHECKIN_CARD_MAX_AGE_SECONDS = 300
+
+# Keys earned from club spending recorded by staff: one key per this many THB.
+SPENDING_THB_PER_KEY = 100
+SPENDING_MAX_THB = 500_000  # sanity limit for a single bill
 
 # Telegram alerts to the staff group. Empty token disables sending.
 TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")

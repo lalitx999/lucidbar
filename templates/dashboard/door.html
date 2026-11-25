@@ -32,6 +32,17 @@
           <div><dt>{% translate "Tonight's booking" %}</dt><dd>{% if last_booking %}{{ last_booking.time_slot }} &middot; {{ last_booking.get_area_display }} &middot; {{ last_booking.guests }} &middot; {{ last_booking.get_status_display }}{% else %}-{% endif %}</dd></div>
         </dl>
         {% if last_booking.note %}<div class="small text-muted-lucid">{{ last_booking.note }}</div>{% endif %}
+        <form method="post" action="{% url 'dashboard:member_spending' last.member_id %}" class="d-flex flex-column gap-2 border-top-faint pt-3 mt-2" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="back" value="checkin:{{ last.pk }}">
+          {{ spending_form.nonce }}
+          <div class="eyebrow text-gold">{% translate "Record spending" %}</div>
+          <div class="row g-2">
+            <div class="col-5">{% include "partials/field.html" with field=spending_form.amount %}</div>
+            <div class="col-7">{% include "partials/field.html" with field=spending_form.note %}</div>
+          </div>
+          <button type="submit" class="btn btn-sm btn-outline-gold">{% translate "Record bill" %}</button>
+        </form>
       {% else %}
         <p class="small text-muted-lucid mb-0">{% translate "Nobody scanned yet." %}</p>
       {% endif %}

@@ -1,0 +1,32 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Catalogue" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 mb-3">
+  <h1 class="font-display fs-4 text-uppercase tracking-wide mb-0">{% translate "Treasure catalogue" %}</h1>
+  <a href="{% url 'dashboard:treasure_new' %}" class="btn btn-sm btn-outline-gold">{% translate "Add treasure" %}</a>
+</div>
+<p class="small text-muted-lucid">{% translate "Treasures are never deleted, because unlocked ones must stay on record. Untick Active to hide one from members." %}</p>
+<div class="table-responsive">
+  <table class="table dash-table align-middle">
+    <thead><tr><th></th><th>{% translate "Treasure" %}</th><th>{% translate "Category" %}</th><th class="text-end">{% translate "Keys" %}</th><th class="text-end">{% translate "Stock" %}</th><th>{% translate "Status" %}</th><th></th></tr></thead>
+    <tbody>
+      {% for t in treasures %}
+      <tr>
+        <td>{% if t.image %}<img src="{{ t.image.url }}" alt="" class="thumb-sm" loading="lazy">{% endif %}</td>
+        <td>{{ t.name }}{% if t.is_featured %} <span class="small text-gold">{% translate "Featured" %}</span>{% endif %}</td>
+        <td>{{ t.get_category_display }}</td>
+        <td class="text-end">{{ t.keys_cost }}</td>
+        <td class="text-end">{% if t.stock is None %}{% translate "Unlimited" %}{% else %}{{ t.stock }}{% endif %}</td>
+        <td>{% if t.is_active %}{% translate "Active" %}{% else %}<span class="text-muted-lucid">{% translate "Hidden" %}</span>{% endif %}</td>
+        <td class="text-end"><a href="{% url 'dashboard:treasure_edit' t.pk %}" class="btn btn-sm btn-outline-gold">{% translate "Edit" %}</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="text-muted-lucid">{% translate "No treasures yet." %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

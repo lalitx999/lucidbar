@@ -31,3 +31,17 @@ def portal(request):
         return reveal_selector.can_spin(user)
 
     return {"unread_whispers": SimpleLazyObject(unread), "can_spin": SimpleLazyObject(can_spin)}
+
+
+def staff(request):
+    """`is_manager` for the dashboard navigation (lazy: one query only when used)."""
+    user = getattr(request, "user", None)
+    if not (user and user.is_authenticated and user.is_staff):
+        return {}
+
+    def manager():
+        from apps.core.decorators import is_manager
+
+        return is_manager(user)
+
+    return {"is_manager": SimpleLazyObject(manager)}

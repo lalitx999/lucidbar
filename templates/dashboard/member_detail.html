@@ -1,0 +1,150 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{{ member.full_name }} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'dashboard:members' %}" class="btn-link-gold text-muted-lucid mt-3">{% translate "All members" %}</a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2 mb-3">
+  <div>
+    <h1 class="font-display fs-4 text-uppercase tracking-wide mb-0">{{ member.full_name }}</h1>
+    <div class="small text-gold font-monospace">@{{ member.handle }}</div>
+  </div>
+  <span class="status-pill status-{{ member.status }}">{{ member.get_status_display }}</span>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="lucid-card h-100">
+      <div class="eyebrow text-gold mb-2">{% translate "Profile" %}</div>
+      <dl class="identity-facts mb-0">
+        <div><dt>{% translate "Email" %}</dt><dd>{{ member.email }}</dd></div>
+        <div><dt>{% translate "Mobile" %}</dt><dd>{{ member.display_phone }}</dd></div>
+        <div><dt>{% translate "Date of birth" %}</dt><dd>{{ member.date_of_birth|date:"j M Y" }}</dd></div>
+        <div><dt>{% translate "Nationality" %}</dt><dd>{{ member.get_nationality_display }}</dd></div>
+        <div><dt>{% translate "Joined" %}</dt><dd>{{ member.date_joined|date:"j M Y" }}</dd></div>
+        <div><dt>{% translate "Seal now" %}</dt><dd>{{ membership.tier.name|default:"-" }}{% if membership.ends_at %} &middot; {% blocktranslate with date=membership.ends_at|date:"j M Y" %}until {{ date }}{% endblocktranslate %}{% endif %}</dd></div>
+        <div><dt>{% translate "Keys" %}</dt><dd class="text-gold">{{ balance }}</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="col-md-6 d-flex flex-column gap-3">
+    <form method="post" action="{% url 'dashboard:member_adjust_keys' member.pk %}" class="lucid-card d-flex flex-column gap-2" novalidate>
+      {% csrf_token %}
+      <div class="eyebrow text-gold">{% translate "Adjust keys" %}</div>
+      <div class="row g-2">
+        <div class="col-4">{% include "partials/field.html" with field=adjust_form.delta %}</div>
+        <div class="col-8">{% include "partials/field.html" with field=adjust_form.note %}</div>
+      </div>
+      {% include "partials/field.html" with field=adjust_form.tell_member %}
+      <button type="submit" class="btn btn-sm btn-outline-gold">{% translate "Apply adjustment" %}</button>
+    </form>
+
+    <form method="post" action="{% url 'dashboard:member_spending' member.pk %}" class="lucid-card d-flex flex-column gap-2" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="back" value="{{ member.pk }}">
+      {{ spending_form.nonce }}
+      <div class="eyebrow text-gold">{% translate "Record spending" %}</div>
+      <div class="row g-2">
+        <div class="col-5">{% include "partials/field.html" with field=spending_form.amount %}</div>
+        <div class="col-7">{% include "partials/field.html" with field=spending_form.note %}</div>
+      </div>
+      <button type="submit" class="btn btn-sm btn-outline-gold">{% translate "Record bill" %}</button>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <form method="post" action="{% url 'dashboard:member_grant_seal' member.pk %}" class="lucid-card h-100 d-flex flex-column gap-2" novalidate>
+      {% csrf_token %}
+      <div class="eyebrow text-gold">{% translate "Grant a complimentary seal" %}</div>
+      <div class="row g-2">
+        <div class="col-7">{% include "partials/field.html" with field=grant_form.tier %}</div>
+        <div class="col-5">{% include "partials/field.html" with field=grant_form.days %}</div>
+      </div>
+      {% include "partials/field.html" with field=grant_form.credit_keys %}
+      <button type="submit" class="btn btn-sm btn-outline-gold">{% translate "Grant seal" %}</button>
+    </form>
+  </div>
+  <div class="col-md-6">
+    <div class="lucid-card h-100 d-flex flex-column gap-2">
+      <div class="eyebrow text-gold">{% translate "Account access" %}</div>
+      {% if member.status == "suspended" %}
+        <p class="small text-muted-lucid mb-0">{% translate "This member cannot sign in." %}</p>
+        <form method="post" action="{% url 'dashboard:member_reactivate' member.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-gold">{% translate "Reactivate" %}</button>
+        </form>
+      {% else %}
+        <form method="post" action="{% url 'dashboard:member_suspend' member.pk %}" class="d-flex flex-column gap-2" novalidate>
+          {% csrf_token %}
+          {% include "partials/field.html" with field=suspend_form.reason %}
+          <button type="submit" class="btn btn-sm btn-outline-muted">{% translate "Suspend member" %}</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <h2 class="font-display fs-6 text-uppercase tracking-wide mb-2">{% translate "Keys ledger" %}</h2>
+    <table class="table dash-table align-middle mb-4">
+      <tbody>
+        {% for e in ledger %}
+        <tr><td>{{ e.created_at|date:"j M H:i" }}</td><td>{{ e.get_reason_display }}{% if e.note %}<div class="small text-muted-lucid">{{ e.note }}</div>{% endif %}</td><td class="text-end {% if e.delta > 0 %}text-gold{% endif %}">{% if e.delta > 0 %}+{% endif %}{{ e.delta }}</td><td class="text-end text-muted-lucid">{{ e.balance_after }}</td></tr>
+        {% empty %}<tr><td class="text-muted-lucid">{% translate "No entries." %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+
+    <h2 class="font-display fs-6 text-uppercase tracking-wide mb-2">{% translate "Seals" %}</h2>
+    <table class="table dash-table align-middle mb-4">
+      <tbody>
+        {% for ms in memberships %}
+        <tr><td>{{ ms.tier.name }}</td><td>{{ ms.get_source_display }}</td><td>{{ ms.starts_at|date:"j M Y" }} - {{ ms.ends_at|date:"j M Y"|default:_("no expiry") }}</td></tr>
+        {% empty %}<tr><td class="text-muted-lucid">{% translate "None." %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+
+    <h2 class="font-display fs-6 text-uppercase tracking-wide mb-2">{% translate "Spending" %}</h2>
+    <table class="table dash-table align-middle mb-4">
+      <tbody>
+        {% for sp in spendings %}
+        <tr><td>{{ sp.created_at|date:"j M H:i" }}</td><td class="text-end">{{ sp.amount_thb|floatformat:2 }} THB</td><td>+{{ sp.keys_awarded }}</td><td class="text-muted-lucid">{{ sp.recorded_by.full_name }}</td></tr>
+        {% empty %}<tr><td class="text-muted-lucid">{% translate "None." %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col-lg-6">
+    <h2 class="font-display fs-6 text-uppercase tracking-wide mb-2">{% translate "Visits" %}</h2>
+    <table class="table dash-table align-middle mb-4">
+      <tbody>
+        {% for v in visits %}
+        <tr><td>{{ v.night|date:"D j M Y" }}</td><td>{{ v.created_at|date:"H:i" }}</td><td>+{{ v.keys_awarded }}</td><td class="text-muted-lucid">{{ v.created_by.full_name|default:"-" }}</td></tr>
+        {% empty %}<tr><td class="text-muted-lucid">{% translate "None." %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+
+    <h2 class="font-display fs-6 text-uppercase tracking-wide mb-2">{% translate "Bookings" %}</h2>
+    <table class="table dash-table align-middle mb-4">
+      <tbody>
+        {% for b in bookings %}
+        <tr><td>{{ b.night|date:"j M Y" }} {{ b.time_slot }}</td><td>{{ b.get_area_display }}</td><td><span class="status-pill status-{{ b.status }}">{{ b.get_status_display }}</span></td></tr>
+        {% empty %}<tr><td class="text-muted-lucid">{% translate "None." %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+
+    <h2 class="font-display fs-6 text-uppercase tracking-wide mb-2">{% translate "Audit trail" %}</h2>
+    <table class="table dash-table align-middle mb-4">
+      <tbody>
+        {% for a in audit %}
+        <tr><td>{{ a.created_at|date:"j M H:i" }}</td><td>{{ a.action }}<div class="audit-details">{% for k, v in a.details.items %}{{ k }}: {{ v }}{% if not forloop.last %}; {% endif %}{% endfor %}</div></td><td class="text-muted-lucid">{{ a.actor.full_name }}</td></tr>
+        {% empty %}<tr><td class="text-muted-lucid">{% translate "No manager actions yet." %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n humanize %}
+
+{% block title %}{% translate "Seal tiers" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+{% include "dashboard/partials/settings_tabs.html" with tab="tiers" %}
+<p class="small text-muted-lucid">{% translate "Price changes apply to new checkouts. Payments already started keep the price they were created with." %}</p>
+<div class="table-responsive">
+  <table class="table dash-table align-middle">
+    <thead><tr><th>{% translate "Seal" %}</th><th class="text-end">{% translate "Price (THB)" %}</th><th class="text-end">{% translate "Days" %}</th><th class="text-end">{% translate "Keys" %}</th><th>{% translate "Status" %}</th><th></th></tr></thead>
+    <tbody>
+      {% for t in tiers %}
+      <tr>
+        <td>{{ t.name }}<div class="small text-muted-lucid">{{ t.tagline }}</div></td>
+        <td class="text-end">{% if t.is_free %}{% translate "Free" %}{% else %}{{ t.price_thb|floatformat:2|intcomma }}{% endif %}</td>
+        <td class="text-end">{{ t.period_days|default:"-" }}</td>
+        <td class="text-end">{{ t.initial_keys }}</td>
+        <td>{% if t.is_active %}{% translate "On sale" %}{% else %}<span class="text-muted-lucid">{% translate "Hidden" %}</span>{% endif %}</td>
+        <td class="text-end"><a href="{% url 'dashboard:tier_edit' t.pk %}" class="btn btn-sm btn-outline-gold">{% translate "Edit" %}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
