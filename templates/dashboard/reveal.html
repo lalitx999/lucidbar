@@ -1,0 +1,85 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "The Reveal" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<h1 class="font-display fs-4 text-uppercase tracking-wide mt-3 mb-3">{% translate "The Reveal" %}</h1>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="lucid-card h-100 d-flex flex-column gap-3">
+      <div class="eyebrow text-gold">{% blocktranslate with label=epoch.label %}This week: {{ label }}{% endblocktranslate %}</div>
+      {% if draw %}
+        <div>
+          <div class="small text-muted-lucid">{% translate "The Chosen" %}</div>
+          <div class="fs-5">{{ draw.winner.full_name }} <span class="small text-gold font-monospace">@{{ draw.winner.handle }}</span></div>
+          <div class="small text-muted-lucid">{% blocktranslate with count=draw.eligible_count %}Drawn from {{ count }} eligible members{% endblocktranslate %}{% if draw.drawn_by %} &middot; {% blocktranslate with name=draw.drawn_by.full_name %}by {{ name }}{% endblocktranslate %}{% endif %}</div>
+        </div>
+        {% if draw.spin %}
+          <div class="small">{% translate "Prize won" %}: <span class="text-gold">{{ draw.spin.prize.label }}</span> ({{ draw.spin.prize.value_text }})</div>
+        {% else %}
+          <div class="small text-muted-lucid">{% translate "The winner has not spun yet." %}</div>
+        {% endif %}
+      {% else %}
+        <p class="small text-muted-lucid mb-0">{% blocktranslate count n=eligible_count %}{{ n }} member is eligible.{% plural %}{{ n }} members are eligible.{% endblocktranslate %}</p>
+        {% if can_draw %}
+        <form method="post" action="{% url 'dashboard:reveal_draw' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-lucid"{% if not eligible_count %} disabled{% endif %}>{% translate "Draw The Chosen" %}</button>
+        </form>
+        {% else %}
+        <p class="small text-faint mb-0">{% translate "A manager runs the weekly draw." %}</p>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="lucid-card h-100 d-flex flex-column gap-3">
+      <div class="d-flex justify-content-between align-items-center gap-2">
+        <div class="eyebrow text-gold">{% translate "Prizes to hand over" %}</div>
+        <form method="get" class="d-flex gap-2" role="search">
+          <input type="search" name="q" value="{{ query }}" class="form-control form-control-sm lucid-input" placeholder="{% translate 'Claim code' %}" aria-label="{% translate 'Search prizes' %}">
+        </form>
+      </div>
+      {% for s in prizes_ready %}
+      <div class="d-flex justify-content-between align-items-center gap-2 border-top-faint pt-2">
+        <div>
+          <div>{{ s.prize.label }} <span class="small text-muted-lucid">{{ s.prize.value_text }}</span></div>
+          <div class="small text-muted-lucid">{{ s.member.full_name }} &middot; {{ s.draw.epoch.label }} &middot; <span class="font-monospace text-gold">{{ s.claim_code }}</span></div>
+        </div>
+        <form method="post" action="{% url 'dashboard:prize_hand_over' s.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-gold">{% translate "Hand over" %}</button>
+        </form>
+      </div>
+      {% empty %}
+      <p class="small text-muted-lucid mb-0">{% translate "No prizes waiting." %}</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<h2 class="font-display fs-6 text-uppercase tracking-wide mb-3">{% translate "Past draws" %}</h2>
+{% if history %}
+<div class="table-responsive">
+  <table class="table dash-table align-middle">
+    <thead><tr><th>{% translate "Epoch" %}</th><th>{% translate "The Chosen" %}</th><th class="text-end">{% translate "Eligible" %}</th><th>{% translate "Prize" %}</th><th>{% translate "Drawn by" %}</th></tr></thead>
+    <tbody>
+      {% for d in history %}
+      <tr>
+        <td>{{ d.epoch.label }}</td>
+        <td>{{ d.winner.full_name }}</td>
+        <td class="text-end">{{ d.eligible_count }}</td>
+        <td>{% if d.spin %}{{ d.spin.prize.label }}{% else %}-{% endif %}</td>
+        <td>{{ d.drawn_by.full_name|default:"-" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted-lucid">{% translate "No draws yet." %}</p>
+{% endif %}
+{% endblock %}

@@ -114,6 +114,7 @@ def test_change_password_requires_current_password(client, make_member):
 def test_portal_query_count_is_small(client, make_member, django_assert_max_num_queries):
     client.force_login(make_member())
 
-    # session, user, current membership, open payment, keys balance, featured treasure
-    with django_assert_max_num_queries(6):
+    # session, user, membership, open payment, keys balance, featured treasure,
+    # plus the layout badges: unread whispers and can-spin
+    with django_assert_max_num_queries(8):
         client.get(reverse("core:portal"))

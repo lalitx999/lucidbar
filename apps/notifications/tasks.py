@@ -123,3 +123,34 @@ def notify_redemption(redemption_id: int) -> None:
         ]
     )
     telegram.send_message(text)
+
+
+@shared_task(
+    autoretry_for=(TelegramTemporaryError,),
+    retry_backoff=15,
+    retry_backoff_max=600,
+    retry_jitter=True,
+    max_retries=5,
+)
+def notify_reveal(draw_id: int, event: str) -> None:
+    """Tell staff who was drawn as The Chosen, and what they won."""
+    from apps.reveal.models import ChosenDraw
+
+    draw = ChosenDraw.objects.select_related("epoch", "winner").filter(pk=draw_id).first()
+    if draw is None:
+        return
+    winner = draw.winner
+    lines = [
+        f"<b>{'The Chosen drawn' if event == 'drawn' else 'Wheel spun'}</b>",
+        "",
+        f"Epoch: {escape(draw.epoch.label)}",
+        f"Member: {escape(winner.full_name)} (@{escape(winner.handle)})",
+    ]
+    if event == "drawn":
+        lines.append(f"Eligible members: {draw.eligible_count}")
+    else:
+        spin = getattr(draw, "spin", None)
+        if spin:
+            lines.append(f"Prize: {escape(spin.prize.label)} ({escape(spin.prize.value_text)})")
+            lines.append(f"Claim code: <code>{escape(spin.claim_code)}</code>")
+    telegram.send_message("\n".join(lines))

@@ -91,3 +91,39 @@ def registration_payload():
         "password_confirm": PASSWORD,
         "accept_terms": "on",
     }
+
+
+@pytest.fixture
+def wheel_prizes(db):
+    """The 12 seeded wheel prizes (re-created after transactional flushes)."""
+    from apps.reveal.models import WheelPrize
+
+    seed = importlib.import_module("apps.reveal.migrations.0002_seed_wheel_prizes")
+    if not WheelPrize.objects.exists():
+        for i, (label, description, value) in enumerate(seed.PRIZES):
+            WheelPrize.objects.create(label=label, description=description, value_text=value, sort_order=i)
+    return list(WheelPrize.objects.order_by("sort_order"))
+
+
+@pytest.fixture
+def manager_user(make_member):
+    from django.contrib.auth.models import Group
+
+    user = make_member(is_staff=True, full_name="Manager Person")
+    group, _ = Group.objects.get_or_create(name="Manager")
+    user.groups.add(group)
+    return user
+
+
+@pytest.fixture
+def seal_member(make_member, seal_tiers):
+    """An active member holding the free seal (eligible for the draw)."""
+
+    def _make(**extra):
+        from apps.memberships.services import membership_service
+
+        member = make_member(**extra)
+        membership_service.grant_signup_membership(member)
+        return member
+
+    return _make

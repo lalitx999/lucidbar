@@ -6,6 +6,7 @@
 {% block content %}
 <form method="post" class="d-flex flex-column gap-4 fade-in" novalidate>
   {% csrf_token %}
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
   {% translate "Member access" as eyebrow %}{% translate "Enter the portal" as title %}
   {% translate "Sign in with the email and password of your membership." as lead %}
   {% include "partials/screen_heading.html" %}

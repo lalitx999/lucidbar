@@ -196,7 +196,8 @@ def test_catalog_lists_active_treasures(client, make_member, whisky, django_asse
     Treasure.objects.create(name="Hidden", keys_cost=1, is_active=False)
     client.force_login(make_member())
 
-    with django_assert_max_num_queries(6):
+    # page queries plus the two layout badges (unread whispers, can-spin)
+    with django_assert_max_num_queries(8):
         html = client.get(reverse("treasures:catalog")).content.decode()
 
     assert "Whisky" in html

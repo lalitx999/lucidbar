@@ -590,6 +590,70 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
+   Whispers
+--------------------------------------------------------------------------- */
+.whisper-bell { position: relative; display: inline-flex; color: var(--lucid-muted); }
+.whisper-bell:hover { color: var(--lucid-gold); }
+.whisper-badge {
+  position: absolute;
+  top: -0.375rem;
+  right: -0.5rem;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--lucid-gold);
+  color: #000;
+  font-size: 0.5625rem;
+  font-weight: 800;
+  line-height: 1rem;
+  text-align: center;
+}
+.whisper-list { display: grid; gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.whisper { display: flex; flex-direction: column; gap: 0.375rem; padding: 1rem; }
+.whisper.is-unread { border-color: rgba(var(--lucid-gold-rgb), 0.5); box-shadow: 0 0 12px rgba(var(--lucid-gold-rgb), 0.12); }
+.whisper-title { font-weight: 600; font-size: 0.875rem; }
+
+/* ---------------------------------------------------------------------------
+   Prize wheel
+--------------------------------------------------------------------------- */
+.wheel-wrap { position: relative; width: 100%; max-width: 20rem; margin: 0 auto; }
+.wheel { display: block; width: 100%; height: auto; }
+.wheel-rotor { transform-origin: 0 0; transform-box: view-box; }
+.wheel-rotor.is-spinning { transition: transform 6s cubic-bezier(0.12, 0.8, 0.1, 1); }
+.wheel-rim { fill: #000; stroke: var(--lucid-gold); stroke-width: 2; }
+.wheel-slice { stroke: #000; stroke-width: 0.6; }
+.wheel-slice-gold { fill: #b8932c; }
+.wheel-slice-dark { fill: #141414; }
+.wheel-label {
+  font-family: var(--lucid-font-sans);
+  font-size: 5.6px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  dominant-baseline: middle;
+  text-transform: uppercase;
+}
+.wheel-label-end { text-anchor: end; }
+.wheel-label-start { text-anchor: start; }
+.wheel-label-gold { fill: #000; }
+.wheel-label-dark { fill: var(--lucid-gold-light); }
+.wheel-hub { fill: #000; stroke: var(--lucid-gold); stroke-width: 1.5; }
+.wheel-pointer {
+  position: absolute;
+  top: -0.375rem;
+  left: 50%;
+  z-index: 1;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-left: 0.6rem solid transparent;
+  border-right: 0.6rem solid transparent;
+  border-top: 1.1rem solid var(--lucid-gold);
+  filter: drop-shadow(0 0 4px rgba(var(--lucid-gold-rgb), 0.6));
+}
+.wheel-wrap.is-done .wheel { opacity: 0.85; }
+
+/* ---------------------------------------------------------------------------
    Staff dashboard
 --------------------------------------------------------------------------- */
 .dash-shell { min-height: 100dvh; background: var(--lucid-page); }

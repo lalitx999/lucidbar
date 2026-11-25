@@ -14,7 +14,13 @@
         <img src="{% static 'img/logo-256.png' %}" alt="" class="brand-logo brand-logo-sm" width="32" height="32">
         <span class="font-display text-white tracking-wide">Lucid</span>
       </a>
-      <span class="small text-gold font-monospace">@{{ request.user.handle }}</span>
+      <div class="d-flex align-items-center gap-3">
+        <span class="small text-gold font-monospace">@{{ request.user.handle }}</span>
+        <a href="{% url 'whispers:inbox' %}" class="whisper-bell" aria-label="{% if unread_whispers %}{% blocktranslate count n=unread_whispers %}{{ n }} unread whisper{% plural %}{{ n }} unread whispers{% endblocktranslate %}{% else %}{% translate 'Whispers' %}{% endif %}">
+          {% icon "mail" "icon" %}
+          {% if unread_whispers %}<span class="whisper-badge">{{ unread_whispers }}</span>{% endif %}
+        </a>
+      </div>
     </header>
 
     <main class="app-content portal-content">
@@ -29,10 +35,9 @@
       <a href="{% url 'keys:keys' %}" class="tabbar-item{% if active_tab == 'keys' %} active{% endif %}"{% if active_tab == 'keys' %} aria-current="page"{% endif %}>
         {% icon "coins" %}<span>{% translate "Keys" %}</span>
       </a>
-      {% comment %} Reveal opens in Phase 4. {% endcomment %}
-      <span class="tabbar-item disabled" aria-disabled="true">
-        {% icon "refresh" %}<span>{% translate "Reveal" %}</span>
-      </span>
+      <a href="{% url 'reveal:reveal' %}" class="tabbar-item{% if active_tab == 'reveal' %} active{% endif %}"{% if active_tab == 'reveal' %} aria-current="page"{% endif %}>
+        {% if can_spin %}{% icon "refresh" "pulse text-gold" %}{% else %}{% icon "refresh" %}{% endif %}<span>{% translate "Reveal" %}</span>
+      </a>
       <a href="{% url 'treasures:catalog' %}" class="tabbar-item{% if active_tab == 'treasures' %} active{% endif %}"{% if active_tab == 'treasures' %} aria-current="page"{% endif %}>
         {% icon "gift" %}<span>{% translate "Treasures" %}</span>
       </a>

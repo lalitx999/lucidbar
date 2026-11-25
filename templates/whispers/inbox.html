@@ -1,0 +1,39 @@
+{% extends "layouts/portal.html" %}
+{% load i18n icons %}
+
+{% block title %}{% translate "Whispers" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="d-flex flex-column gap-4 fade-in">
+  <div>
+    <span class="eyebrow text-gold">{% translate "Private" %}</span>
+    <h1 class="font-display fw-semibold text-uppercase tracking-wide fs-5 mt-1 mb-0">{% translate "Whispers" %}</h1>
+  </div>
+
+  {% if page.object_list %}
+  <ul class="whisper-list">
+    {% for w in page.object_list %}
+    <li class="lucid-card whisper{% if w.pk in unread_ids %} is-unread{% endif %}">
+      <div class="d-flex justify-content-between gap-2">
+        <span class="micro text-gold">{{ w.get_kind_display }}</span>
+        <span class="ledger-meta">{{ w.created_at|date:"j M Y H:i" }}</span>
+      </div>
+      <div class="whisper-title">{{ w.title }}</div>
+      {% if w.body %}<p class="small text-muted-lucid mb-0">{{ w.body|linebreaksbr }}</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% if page.has_other_pages %}
+  <nav class="d-flex justify-content-between" aria-label="{% translate 'Whisper pages' %}">
+    {% if page.has_previous %}<a class="btn-link-gold" href="?page={{ page.previous_page_number }}">{% icon "arrow-left" "icon-xs" %}<span>{% translate "Newer" %}</span></a>{% else %}<span></span>{% endif %}
+    {% if page.has_next %}<a class="btn-link-gold" href="?page={{ page.next_page_number }}"><span>{% translate "Older" %}</span>{% icon "arrow-right" "icon-xs" %}</a>{% endif %}
+  </nav>
+  {% endif %}
+  {% else %}
+  <div class="lucid-card text-center">
+    <span class="emblem emblem-sm mx-auto">{% icon "mail" "icon-lg" %}</span>
+    <p class="small text-muted-lucid mt-3 mb-0">{% translate "No whispers yet. Messages from the club will appear here." %}</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

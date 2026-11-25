@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.shortcuts import redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
@@ -38,6 +39,16 @@ def _client_ip(request):
     if settings.TRUST_X_REAL_IP:
         return request.META.get("HTTP_X_REAL_IP") or request.META.get("REMOTE_ADDR", "")
     return request.META.get("REMOTE_ADDR", "")
+
+
+def _safe_next(request):
+    """The ?next= target, only if it points back into this site (no open redirect)."""
+    target = request.POST.get("next") or request.GET.get("next") or ""
+    if target and url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return target
+    return ""
 
 
 def _redirect_if_signed_in(request):
@@ -137,8 +148,8 @@ def login_view(request):
                 messages.info(request, _("Please verify your email to continue."))
                 return redirect("accounts:verify")
             login(request, member)
-            return redirect("core:portal")
-    return render(request, "accounts/login.html", {"form": form})
+            return redirect(_safe_next(request) or "core:portal")
+    return render(request, "accounts/login.html", {"form": form, "next": _safe_next(request)})
 
 
 @require_POST

@@ -1,0 +1,97 @@
+{% extends "layouts/portal.html" %}
+{% load static i18n icons l10n %}
+
+{% block title %}{% translate "The Reveal" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="d-flex flex-column gap-4 fade-in" id="reveal"
+         data-spin-url="{% url 'reveal:spin' %}"
+         data-error-text="{% translate 'Something went wrong. Please try again.' %}">
+
+  <div class="text-center">
+    <span class="eyebrow text-gold">{% blocktranslate with label=epoch.label %}Epoch {{ label }}{% endblocktranslate %}</span>
+    <h1 class="font-display fw-semibold text-uppercase tracking-wide fs-5 mt-2 mb-1">{% translate "The Reveal" %}</h1>
+    <p class="small text-muted-lucid mb-0">{% translate "Each week one member is drawn as The Chosen and spins the wheel." %}</p>
+  </div>
+
+  <div class="wheel-wrap{% if spin %} is-done{% endif %}">
+    <div class="wheel-pointer" aria-hidden="true"></div>
+    <svg class="wheel" id="wheel" viewBox="-104 -104 208 208" role="img"
+         aria-label="{% translate 'Prize wheel' %}"
+         data-rest="{{ resting_rotation|unlocalize }}">
+      <g class="wheel-rotor" id="wheel-rotor">
+        <circle r="103" class="wheel-rim"></circle>
+        {% for seg in segments %}
+        {% localize off %}
+        <path d="{{ seg.path }}" class="wheel-slice wheel-slice-{{ seg.tone }}"></path>
+        <text x="{{ seg.label_x }}" y="{{ seg.label_y }}" transform="rotate({{ seg.label_rotate }} {{ seg.label_x }} {{ seg.label_y }})" class="wheel-label wheel-label-{{ seg.tone }} wheel-label-{{ seg.anchor }}">{{ seg.label }}</text>
+        {% endlocalize %}
+        {% endfor %}
+      </g>
+      <circle r="16" class="wheel-hub"></circle>
+    </svg>
+  </div>
+
+  {% if is_chosen and not spin %}
+    <form method="post" action="{% url 'reveal:spin' %}" id="spin-form" class="d-flex flex-column gap-2">
+      {% csrf_token %}
+      <p class="text-center text-gold small fw-semibold mb-1">{% translate "You are this week's Chosen." %}</p>
+      <button type="submit" class="btn btn-lucid glow-gold-hover" id="spin-button">
+        <span>{% translate "Spin the wheel" %}</span>{% icon "refresh" "icon-sm" %}
+      </button>
+    </form>
+  {% endif %}
+
+  <div class="lucid-card text-center{% if not spin %} d-none{% endif %}" id="spin-result" aria-live="polite">
+    <span class="eyebrow text-gold">{% translate "You won" %}</span>
+    <div class="font-display fs-4 text-uppercase tracking-wide text-gold text-glow mt-2" data-field="prize">{{ spin.prize.label }}</div>
+    <div class="small text-muted-lucid" data-field="description">{{ spin.prize.description }}</div>
+    <div class="small text-faint" data-field="value">{{ spin.prize.value_text }}</div>
+    <div class="d-flex justify-content-center align-items-center gap-2 mt-3">
+      <span class="micro text-muted-lucid">{% translate "Claim code" %}</span>
+      <span class="claim-code" data-field="claim_code">{{ spin.claim_code }}</span>
+    </div>
+    <p class="small text-faint mt-2 mb-0">{% translate "Show this code to our staff to collect your prize." %}</p>
+  </div>
+
+  {% if not is_chosen %}
+  <div class="lucid-card text-center">
+    {% if draw %}
+      <span class="eyebrow text-gold">{% translate "This week's Chosen" %}</span>
+      <div class="font-monospace text-gold mt-2">@{{ draw.winner.handle }}</div>
+      <p class="small text-muted-lucid mt-2 mb-0">{% translate "Keep your seal active to be in next week's draw." %}</p>
+    {% else %}
+      <span class="eyebrow text-gold">{% translate "Awaiting the draw" %}</span>
+      <p class="small text-muted-lucid mt-2 mb-0">{% translate "Every member with an active seal is in the draw. The Chosen will be revealed soon." %}</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="lucid-card">
+    <div class="eyebrow text-gold mb-2">{% translate "Prizes on the wheel" %}</div>
+    <ul class="ledger-list">
+      {% for prize in prizes %}
+      <li><div><div class="ledger-reason">{{ prize.label }}</div><div class="ledger-meta">{{ prize.description }}</div></div><div class="ledger-meta text-end">{{ prize.value_text }}</div></li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  {% if past_spins %}
+  <div class="lucid-card">
+    <div class="eyebrow text-gold mb-2">{% translate "Your past prizes" %}</div>
+    <ul class="ledger-list">
+      {% for s in past_spins %}
+      <li>
+        <div><div class="ledger-reason">{{ s.prize.label }}</div><div class="ledger-meta">{{ s.draw.epoch.label }} &middot; {{ s.get_status_display }}</div></div>
+        {% if s.status == "ready" %}<span class="claim-code">{{ s.claim_code }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/reveal.js' %}" defer></script>
+{% endblock %}

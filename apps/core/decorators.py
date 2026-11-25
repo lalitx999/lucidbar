@@ -46,3 +46,26 @@ def staff_required(view_func):
         return view_func(request, *args, **kwargs)
 
     return wrapper
+
+
+MANAGER_GROUP = "Manager"
+
+
+def is_manager(user) -> bool:
+    if not (user.is_authenticated and user.is_active and user.is_staff):
+        return False
+    return user.is_superuser or user.groups.filter(name=MANAGER_GROUP).exists()
+
+
+def manager_required(view_func):
+    """Like staff_required, but only for the Manager group (or superuser)."""
+
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(request.get_full_path())
+        if not is_manager(request.user):
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+
+    return wrapper

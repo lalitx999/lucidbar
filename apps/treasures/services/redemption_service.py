@@ -15,6 +15,8 @@ from django.utils.translation import gettext as _
 from apps.keys.models import KeysEntry
 from apps.keys.services import ledger_service
 from apps.keys.services.ledger_service import InsufficientKeys
+from apps.whispers.models import Whisper
+from apps.whispers.services import whisper_service
 
 from ..models import Redemption, Treasure
 
@@ -54,6 +56,12 @@ def redeem(member, treasure_id: int) -> Redemption:
 
         if treasure.stock is not None:
             Treasure.objects.filter(pk=treasure.pk).update(stock=F("stock") - 1)
+        whisper_service.send(
+            member,
+            _("Treasure unlocked: %(name)s") % {"name": treasure.name},
+            _("Show claim code %(code)s to our staff to collect it.") % {"code": redemption.claim_code},
+            kind=Whisper.Kind.TREASURE,
+        )
         transaction.on_commit(lambda: notify_redemption.delay(redemption.pk))
     return redemption
 
@@ -103,4 +111,10 @@ def cancel(redemption: Redemption, staff) -> Redemption:
         )
         if treasure.stock is not None:
             Treasure.objects.filter(pk=treasure.pk).update(stock=F("stock") + 1)
+        whisper_service.send(
+            redemption.member,
+            _("Treasure cancelled: %(name)s") % {"name": treasure.name},
+            _("%(keys)d keys were returned to your balance.") % {"keys": redemption.keys_spent},
+            kind=Whisper.Kind.TREASURE,
+        )
     return redemption

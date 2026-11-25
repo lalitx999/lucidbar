@@ -17,6 +17,8 @@ from django.utils.translation import gettext as _
 
 from apps.memberships.models import SealTier
 from apps.memberships.services import membership_service
+from apps.whispers.models import Whisper
+from apps.whispers.services import whisper_service
 
 from ..models import PaymentIntent, PaymentSlip
 from ..slip_image import SlipImageError, clean_slip
@@ -199,7 +201,18 @@ def _approve(intent: PaymentIntent, by) -> None:
     intent.decided_by = by
     intent.decided_at = timezone.now()
     intent.save(update_fields=["status", "status_message", "decided_by", "decided_at", "updated_at"])
-    membership_service.grant_paid_membership(intent.member, intent.tier, intent)
+    membership = membership_service.grant_paid_membership(intent.member, intent.tier, intent)
+    whisper_service.send(
+        intent.member,
+        _("%(tier)s activated") % {"tier": intent.tier.name},
+        _("Payment %(ref)s confirmed. Active until %(date)s. %(keys)d keys added.")
+        % {
+            "ref": intent.reference,
+            "date": timezone.localtime(membership.ends_at).strftime("%d %b %Y"),
+            "keys": intent.tier.initial_keys,
+        },
+        kind=Whisper.Kind.PAYMENT,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -243,3 +256,9 @@ def staff_reject(intent: PaymentIntent, staff, reason: str, allow_new_slip: bool
             # Give the member a fresh window to upload a correct slip.
             intent.expires_at = timezone.now() + timedelta(hours=settings.PAYMENT_INTENT_TTL_HOURS)
         intent.save(update_fields=["status", "status_message", "decided_by", "decided_at", "expires_at", "updated_at"])
+        whisper_service.send(
+            intent.member,
+            _("Payment %(ref)s not accepted") % {"ref": intent.reference},
+            intent.status_message,
+            kind=Whisper.Kind.PAYMENT,
+        )

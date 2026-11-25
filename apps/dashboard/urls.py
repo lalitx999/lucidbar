@@ -14,4 +14,8 @@ urlpatterns = [
     path("treasures/", views.redemptions, name="redemptions"),
     path("treasures/<int:redemption_id>/hand-over/", views.redemption_hand_over, name="redemption_hand_over"),
     path("treasures/<int:redemption_id>/cancel/", views.redemption_cancel, name="redemption_cancel"),
+    path("reveal/", views.reveal, name="reveal"),
+    path("reveal/draw/", views.reveal_draw, name="reveal_draw"),
+    path("reveal/prizes/<int:spin_id>/hand-over/", views.prize_hand_over, name="prize_hand_over"),
+    path("broadcasts/", views.broadcasts, name="broadcasts"),
 ]

@@ -1,0 +1,43 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Broadcasts" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<h1 class="font-display fs-4 text-uppercase tracking-wide mt-3 mb-3">{% translate "Broadcast a whisper" %}</h1>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <form method="post" class="lucid-card d-flex flex-column gap-3" novalidate>
+      {% csrf_token %}
+      {% include "partials/form_errors.html" %}
+      {% include "partials/field.html" with field=form.title %}
+      {% include "partials/field.html" with field=form.body %}
+      {% include "partials/field.html" with field=form.audience %}
+      <button type="submit" class="btn btn-lucid">{% translate "Send broadcast" %}</button>
+    </form>
+  </div>
+  <div class="col-lg-7">
+    <h2 class="font-display fs-6 text-uppercase tracking-wide mb-3">{% translate "Recent broadcasts" %}</h2>
+    {% if recent %}
+    <div class="table-responsive">
+      <table class="table dash-table align-middle">
+        <thead><tr><th>{% translate "Title" %}</th><th>{% translate "Audience" %}</th><th class="text-end">{% translate "Recipients" %}</th><th>{% translate "Sent" %}</th></tr></thead>
+        <tbody>
+          {% for b in recent %}
+          <tr>
+            <td>{{ b.title }}<div class="small text-muted-lucid">{{ b.body|truncatechars:70 }}</div></td>
+            <td>{{ b.get_audience_display }}</td>
+            <td class="text-end">{{ b.recipients }}</td>
+            <td>{{ b.created_at|date:"j M Y H:i" }}{% if b.sent_by %}<div class="small text-muted-lucid">{{ b.sent_by.full_name }}</div>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted-lucid">{% translate "No broadcasts yet." %}</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

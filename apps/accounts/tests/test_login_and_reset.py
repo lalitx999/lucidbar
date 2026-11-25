@@ -149,3 +149,23 @@ def test_suspended_member_gets_no_reset_email(client, make_member):
     client.post(reverse("accounts:password_reset"), {"email": member.email})
 
     assert not mail.outbox
+
+
+def test_login_returns_to_next_page(client, make_member):
+    member = make_member()
+
+    response = client.post(
+        reverse("accounts:login") + "?next=/portal/keys/", {"email": member.email, "password": PASSWORD}
+    )
+
+    assert response["Location"] == "/portal/keys/"
+
+
+def test_login_ignores_external_next(client, make_member):
+    member = make_member()
+
+    response = client.post(
+        reverse("accounts:login"), {"email": member.email, "password": PASSWORD, "next": "https://evil.example/"}
+    )
+
+    assert response["Location"] == reverse("core:portal")
