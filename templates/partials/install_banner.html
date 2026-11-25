@@ -1,0 +1,17 @@
+{% load i18n icons %}
+{% comment %}
+  Hidden until static/js/pwa.js decides it is useful: Android/desktop Chrome
+  fire `beforeinstallprompt`; iOS Safari gets short instructions instead.
+{% endcomment %}
+<div class="install-banner lucid-card d-none" id="install-banner" role="region" aria-label="{% translate 'Install the app' %}">
+  <div class="d-flex align-items-start gap-3">
+    <span class="emblem emblem-sm">{% icon "download" "icon" %}</span>
+    <div class="flex-grow-1">
+      <div class="eyebrow text-gold">{% translate "Lucid on your home screen" %}</div>
+      <p class="small text-muted-lucid mb-2" data-install-text="prompt">{% translate "Install the app for one-tap access to your keys and identity card." %}</p>
+      <p class="small text-muted-lucid mb-2 d-none" data-install-text="ios">{% translate "In Safari, tap the Share button, then Add to Home Screen." %}</p>
+      <button type="button" class="btn btn-sm btn-lucid d-none" id="install-accept">{% translate "Install" %}</button>
+    </div>
+    <button type="button" class="btn-close btn-close-white" id="install-dismiss" aria-label="{% translate 'Not now' %}"></button>
+  </div>
+</div>

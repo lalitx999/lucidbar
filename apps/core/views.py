@@ -1,8 +1,10 @@
 from django.db import connection
-from django.http import HttpResponsePermanentRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponsePermanentRedirect, JsonResponse
 from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from django.templatetags.static import static
-from django.views.decorators.cache import never_cache
+from django.urls import reverse
+from django.views.decorators.cache import cache_control, never_cache
 from django.views.decorators.http import require_safe
 
 from apps.keys.selectors import keys_selector
@@ -10,6 +12,7 @@ from apps.memberships.selectors import membership_selector
 from apps.payments.selectors import payment_selector
 from apps.treasures.selectors import treasure_selector
 
+from . import pwa
 from .decorators import member_required
 
 
@@ -60,4 +63,44 @@ def healthz(request):
 def favicon(request):
     """Browsers request /favicon.ico directly. Resolved per request so the
     hashed static file name from collectstatic is used in production."""
-    return HttpResponsePermanentRedirect(static("img/logo-256.png"))
+    return HttpResponsePermanentRedirect(static("img/pwa/favicon-32.png"))
+
+
+# ---------------------------------------------------------------------------
+# PWA
+# ---------------------------------------------------------------------------
+@require_safe
+@cache_control(public=True, max_age=3600)
+def web_manifest(request):
+    response = JsonResponse(pwa.manifest(), json_dumps_params={"ensure_ascii": False})
+    response["Content-Type"] = "application/manifest+json"
+    return response
+
+
+@require_safe
+def service_worker(request):
+    """
+    Served from the site root so its scope covers every page. Browsers must
+    always revalidate it, otherwise a deploy would not reach installed apps.
+    """
+    urls = pwa.precache_urls()
+    body = render_to_string(
+        "pwa/sw.js",
+        {
+            "version": pwa.cache_version(urls),
+            "precache": urls,
+            "offline_url": reverse("core:offline"),
+            "static_prefix": static(""),
+        },
+    )
+    response = HttpResponse(body, content_type="application/javascript; charset=utf-8")
+    response["Cache-Control"] = "no-cache"
+    response["Service-Worker-Allowed"] = "/"
+    return response
+
+
+@require_safe
+@cache_control(public=True, max_age=3600)
+def offline(request):
+    """Shown by the service worker when there is no connection. No personal data."""
+    return render(request, "core/offline.html")

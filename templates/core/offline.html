@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n static icons %}
+
+{% block title %}{% translate "Offline" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block body %}
+<main class="offline-screen">
+  <div class="d-flex flex-column align-items-center gap-3 text-center">
+    <img src="{% static 'img/logo-256.png' %}" alt="" class="brand-logo" width="96" height="96">
+    <span class="eyebrow text-gold">{% translate "No connection" %}</span>
+    <h1 class="font-display fs-4 text-uppercase tracking-wide mb-0">{% translate "You are offline" %}</h1>
+    <p class="text-muted-lucid mb-0">{% translate "Your keys, seal and whispers need a live connection. Check your signal and try again." %}</p>
+    <a href="{% url 'core:portal' %}" class="btn btn-lucid mt-2">{% icon "refresh" "icon-sm" %}<span>{% translate "Try again" %}</span></a>
+  </div>
+</main>
+{% endblock %}

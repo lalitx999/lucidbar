@@ -39,7 +39,7 @@ def test_favicon_redirects_to_static_logo(client):
     response = client.get("/favicon.ico")
 
     assert response.status_code == 301
-    assert response["Location"].endswith("img/logo-256.png")
+    assert response["Location"].endswith("img/pwa/favicon-32.png")
 
 
 def test_healthz_reports_ok(client):

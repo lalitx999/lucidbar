@@ -761,3 +761,7 @@ body {
 .link-gold { color: var(--lucid-gold); text-decoration: none; }
 .link-gold:hover { color: var(--lucid-gold-light); }
 .edit-form { max-width: 36rem; }
+
+/* PWA */
+.install-banner { margin-bottom: 1rem; border-color: rgba(var(--lucid-gold-rgb), 0.35); }
+.offline-screen { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 2rem 1.25rem; max-width: 28rem; margin: 0 auto; }
