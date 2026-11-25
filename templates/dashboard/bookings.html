@@ -1,0 +1,54 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Bookings" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3 mb-3">
+  <h1 class="font-display fs-4 text-uppercase tracking-wide mb-0">{% translate "VIP Chamber bookings" %}</h1>
+  <form method="get" class="d-flex gap-2" role="search">
+    <input type="search" name="q" value="{{ query }}" class="form-control lucid-input" placeholder="{% translate 'Reference, name or email' %}" aria-label="{% translate 'Search' %}">
+    <button type="submit" class="btn btn-outline-gold">{% translate "Search" %}</button>
+  </form>
+</div>
+
+{% if query %}
+<h2 class="font-display fs-6 text-uppercase tracking-wide mb-3">{% translate "Search results" %}</h2>
+{% include "dashboard/partials/booking_table.html" with rows=results empty_text=_("No matching bookings.") %}
+{% endif %}
+
+<h2 class="font-display fs-6 text-uppercase tracking-wide mb-3">{% translate "New requests" %}</h2>
+{% if requests %}
+<div class="d-flex flex-column gap-3 mb-4">
+  {% for b in requests %}
+  <div class="lucid-card d-flex flex-column gap-2">
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <div>
+        <div class="fs-6">{{ b.night|date:"D j M Y" }} &middot; {{ b.time_slot }} &middot; {{ b.get_area_display }} &middot; {% blocktranslate count n=b.guests %}{{ n }} guest{% plural %}{{ n }} guests{% endblocktranslate %}</div>
+        <div class="small text-muted-lucid">{{ b.member.full_name }} &middot; @{{ b.member.handle }} &middot; {{ b.member.display_phone }} &middot; <span class="font-monospace">{{ b.reference }}</span></div>
+      </div>
+      <span class="small text-faint">{% blocktranslate with ago=b.created_at|timesince %}{{ ago }} ago{% endblocktranslate %}</span>
+    </div>
+    {% if b.note %}<div class="small">{{ b.note }}</div>{% endif %}
+    <div class="row g-2">
+      <form method="post" action="{% url 'dashboard:booking_confirm' b.pk %}" class="col-md-6 d-flex gap-2">
+        {% csrf_token %}
+        <input type="text" name="note" maxlength="300" class="form-control form-control-sm lucid-input" placeholder="{% translate 'Optional note, e.g. table number' %}" aria-label="{% translate 'Note for the member' %}">
+        <button type="submit" class="btn btn-sm btn-lucid text-nowrap">{% translate "Confirm" %}</button>
+      </form>
+      <form method="post" action="{% url 'dashboard:booking_decline' b.pk %}" class="col-md-6 d-flex gap-2">
+        {% csrf_token %}
+        <input type="text" name="note" maxlength="300" required class="form-control form-control-sm lucid-input" placeholder="{% translate 'Reason for the member' %}" aria-label="{% translate 'Reason for declining' %}">
+        <button type="submit" class="btn btn-sm btn-outline-muted text-nowrap">{% translate "Decline" %}</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted-lucid mb-4">{% translate "No requests waiting." %}</p>
+{% endif %}
+
+<h2 class="font-display fs-6 text-uppercase tracking-wide mb-3">{% translate "Confirmed, upcoming" %}</h2>
+{% include "dashboard/partials/booking_table.html" with rows=confirmed empty_text=_("Nothing confirmed yet.") %}
+{% endblock %}

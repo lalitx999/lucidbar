@@ -1,0 +1,68 @@
+{% extends "layouts/portal.html" %}
+{% load i18n icons %}
+
+{% block title %}{% translate "VIP Chamber" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="d-flex flex-column gap-4 fade-in">
+  <a href="{% url 'core:portal' %}" class="btn-link-gold text-muted-lucid">
+    {% icon "arrow-left" "icon-xs" %}<span>{% translate "Portal" %}</span>
+  </a>
+
+  {% translate "The VIP Chamber" as eyebrow %}{% translate "Book your table" as title %}
+  {% translate "Send a request and our hosts will confirm it in your Whispers." as lead %}
+  {% include "partials/screen_heading.html" %}
+
+  <form method="post" class="lucid-card d-flex flex-column gap-3" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_errors.html" %}
+    <div class="row g-2">
+      <div class="col-7">{% include "partials/field.html" with field=form.night icon="star" %}</div>
+      <div class="col-5">{% include "partials/field.html" with field=form.guests icon="user" %}</div>
+    </div>
+    {% include "partials/field.html" with field=form.time_slot %}
+    {% include "partials/field.html" with field=form.area icon="diamond" %}
+    {% include "partials/field.html" with field=form.note %}
+    <button type="submit" class="btn btn-lucid">
+      <span>{% translate "Request booking" %}</span>{% icon "arrow-right" "icon-sm" %}
+    </button>
+  </form>
+
+  <div class="d-flex flex-column gap-2">
+    <div class="eyebrow text-gold">{% translate "Your bookings" %}</div>
+    {% for b in upcoming %}
+    <div class="lucid-card booking-row d-flex flex-column gap-2">
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <div>
+          <div class="font-display text-uppercase tracking-wide">{{ b.night|date:"D j M" }} &middot; {{ b.time_slot }}</div>
+          <div class="small text-muted-lucid">{{ b.get_area_display }} &middot; {% blocktranslate count n=b.guests %}{{ n }} guest{% plural %}{{ n }} guests{% endblocktranslate %}</div>
+        </div>
+        <span class="status-pill status-{{ b.status }}">{{ b.get_status_display }}</span>
+      </div>
+      {% if b.staff_note %}<div class="small">{{ b.staff_note }}</div>{% endif %}
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="small font-monospace text-faint">{{ b.reference }}</span>
+        {% if b.is_open %}
+        <form method="post" action="{% url 'bookings:cancel' b.reference %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-muted">{% translate "Cancel" %}</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <p class="small text-muted-lucid mb-0">{% translate "No upcoming bookings." %}</p>
+    {% endfor %}
+
+    {% if past %}
+    <div class="eyebrow text-muted-lucid mt-3">{% translate "Past" %}</div>
+    {% for b in past %}
+    <div class="d-flex justify-content-between small border-top-faint pt-2">
+      <span>{{ b.night|date:"j M Y" }} &middot; {{ b.time_slot }}</span>
+      <span class="text-muted-lucid">{{ b.get_status_display }}</span>
+    </div>
+    {% endfor %}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

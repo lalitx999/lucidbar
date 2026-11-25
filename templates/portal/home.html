@@ -43,6 +43,15 @@
     {% endif %}
   </div>
 
+  <a href="{% url 'bookings:chamber' %}" class="lucid-card d-flex align-items-center gap-3 text-decoration-none">
+    <span class="emblem emblem-sm">{% icon "diamond" "icon-lg" %}</span>
+    <div class="flex-grow-1">
+      <div class="eyebrow text-gold">{% translate "VIP Chamber" %}</div>
+      <div class="small text-muted-lucid">{% translate "Book your premium table." %}</div>
+    </div>
+    {% icon "arrow-right" "icon-sm text-gold" %}
+  </a>
+
   {% if featured %}
   <a href="{% url 'treasures:detail' featured.pk %}" class="lucid-card featured-treasure text-decoration-none">
     <span class="eyebrow text-gold">{% translate "Featured treasure" %}</span>

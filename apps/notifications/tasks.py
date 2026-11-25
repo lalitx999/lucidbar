@@ -154,3 +154,36 @@ def notify_reveal(draw_id: int, event: str) -> None:
             lines.append(f"Prize: {escape(spin.prize.label)} ({escape(spin.prize.value_text)})")
             lines.append(f"Claim code: <code>{escape(spin.claim_code)}</code>")
     telegram.send_message("\n".join(lines))
+
+
+@shared_task(
+    autoretry_for=(TelegramTemporaryError,),
+    retry_backoff=15,
+    retry_backoff_max=600,
+    retry_jitter=True,
+    max_retries=5,
+)
+def notify_booking(booking_id: int, event: str) -> None:
+    """Tell staff about a new VIP Chamber request, or a confirmed one being cancelled."""
+    from apps.bookings.models import Booking
+
+    booking = Booking.objects.select_related("member").filter(pk=booking_id).first()
+    if booking is None:
+        return
+    member = booking.member
+    heading = {"requested": "New VIP Chamber request", "cancelled": "Booking cancelled by member"}.get(
+        event, "Booking update"
+    )
+    lines = [
+        f"<b>{escape(heading)}</b>",
+        "",
+        f"Member: {escape(member.full_name)} (@{escape(member.handle)})",
+        f"Phone: {escape(member.display_phone)}",
+        f"Night: {booking.night:%a %d %b %Y} at {escape(booking.time_slot)}",
+        f"Area: {escape(str(booking.get_area_display()))}",
+        f"Guests: {booking.guests}",
+        f"Reference: <code>{escape(booking.reference)}</code>",
+    ]
+    if booking.note:
+        lines.append(f"Request: {escape(booking.note)}")
+    telegram.send_message("\n".join(lines))

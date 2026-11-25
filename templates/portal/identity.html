@@ -1,5 +1,5 @@
 {% extends "layouts/portal.html" %}
-{% load i18n icons %}
+{% load i18n icons static %}
 
 {% block title %}{% translate "Identity" %} | {{ SITE_NAME }}{% endblock %}
 
@@ -9,11 +9,16 @@
     <span class="eyebrow text-gold">{% translate "Member identity" %}</span>
     <h1 class="font-display fw-semibold text-uppercase tracking-wide fs-5 mt-2 mb-1">{{ request.user.full_name }}</h1>
     <div class="small text-gold font-monospace">@{{ request.user.handle }}</div>
+    <button type="button" class="identity-qr mt-3" data-bs-toggle="modal" data-bs-target="#zoom-card" aria-label="{% translate 'Enlarge identity card' %}">
+      <img src="{% url 'checkin:card_qr' %}" alt="{% translate 'Your identity QR card' %}" width="176" height="176" data-card-qr data-refresh-seconds="60">
+    </button>
+    <div class="eyebrow text-muted-lucid mt-2">{% translate "Present at the door" %}</div>
     <dl class="identity-facts mt-3 mb-0">
       <div><dt>{% translate "Email" %}</dt><dd>{{ request.user.email }}</dd></div>
       <div><dt>{% translate "Mobile" %}</dt><dd>{{ request.user.display_phone }}</dd></div>
       <div><dt>{% translate "Seal" %}</dt><dd>{{ membership.tier.name|default:"-" }}</dd></div>
       <div><dt>{% translate "Member since" %}</dt><dd>{{ request.user.date_joined|date:"j M Y" }}</dd></div>
+      <div><dt>{% translate "Visits" %}</dt><dd>{{ visits.visits }}{% if visits.last_night %} &middot; {% blocktranslate with date=visits.last_night|date:"j M Y" %}last {{ date }}{% endblocktranslate %}{% endif %}</dd></div>
     </dl>
   </div>
 
@@ -40,4 +45,16 @@
     </form>
   </div>
 </section>
+
+<div class="modal fade" id="zoom-card" tabindex="-1" aria-label="{% translate 'Identity card' %}" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content lucid-modal">
+    <button type="button" class="btn-close btn-close-white ms-auto m-2" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
+    <div class="p-3 pt-0 text-center">
+      <img src="{% url 'checkin:card_qr' %}" alt="{% translate 'Your identity QR card' %}" class="identity-qr-large" width="320" height="320" data-card-qr>
+      <div class="small mt-2">{{ request.user.full_name }} <span class="text-gold font-monospace">@{{ request.user.handle }}</span></div>
+    </div>
+  </div></div>
+</div>
 {% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/identity-card.js' %}" defer></script>{% endblock %}

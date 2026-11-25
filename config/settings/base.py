@@ -42,6 +42,8 @@ LOCAL_APPS = [
     "apps.treasures",
     "apps.whispers",
     "apps.reveal",
+    "apps.bookings",
+    "apps.checkin",
     "apps.dashboard",
 ]
 
@@ -266,6 +268,20 @@ if EASYSLIP_MODE not in {"live", "off", "fake"}:
     raise ImproperlyConfigured(f"EASYSLIP_MODE must be live, off or fake (got {EASYSLIP_MODE!r})")
 EASYSLIP_URL = "https://api.easyslip.com/v2/verify/bank"
 EASYSLIP_TIMEOUT_SECONDS = 20
+
+# Club nights run past midnight: before this hour (local time) still counts
+# as the previous night, for check-ins and booking slots.
+BUSINESS_DAY_STARTS_HOUR = 6
+
+# VIP Chamber bookings.
+BOOKING_MAX_DAYS_AHEAD = 60
+BOOKING_MAX_OPEN = 3  # upcoming requested or confirmed bookings per member
+BOOKING_MAX_GUESTS = 15
+
+# Door check-in: keys awarded once per member per night, and how long a QR
+# identity card stays valid (the member's page refreshes it before then).
+CHECKIN_KEYS = 5
+CHECKIN_CARD_MAX_AGE_SECONDS = 300
 
 # Telegram alerts to the staff group. Empty token disables sending.
 TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", default="")

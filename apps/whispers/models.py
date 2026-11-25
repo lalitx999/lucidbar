@@ -33,6 +33,8 @@ class Whisper(models.Model):
         TREASURE = "treasure", _("Treasure")
         REVEAL = "reveal", _("Reveal")
         BROADCAST = "broadcast", _("Announcement")
+        BOOKING = "booking", _("Booking")
+        VISIT = "visit", _("Visit")
 
     member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="whispers")
     kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.SYSTEM)

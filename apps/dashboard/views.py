@@ -1,17 +1,27 @@
 """
 Custom staff dashboard (not Django Admin). Every view is guarded by
 @staff_required (or @manager_required for manager-only actions).
-Sections: payments, treasure hand-over, the Reveal, broadcasts.
+Sections: door check-in, bookings, payments, treasure hand-over, the Reveal,
+broadcasts.
 """
 
 from django.contrib import messages
 from django.http import FileResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.utils.formats import date_format
+from django.utils.timezone import localtime
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods, require_POST, require_safe
 
+from apps.bookings.forms import StaffConfirmForm, StaffDeclineForm
+from apps.bookings.selectors import booking_selector
+from apps.bookings.services import booking_service
+from apps.checkin.selectors import checkin_selector
+from apps.checkin.services import checkin_service
 from apps.core.decorators import is_manager, manager_required, staff_required
+from apps.memberships.selectors import membership_selector
 from apps.payments.forms import StaffApproveForm, StaffRejectForm
 from apps.payments.selectors import payment_selector
 from apps.payments.services import payment_service
@@ -28,7 +38,99 @@ from apps.whispers.services import whisper_service
 @staff_required
 @require_safe
 def home(request):
-    return redirect("dashboard:payments")
+    return redirect("dashboard:door")
+
+
+# ---------------------------------------------------------------------------
+# Door check-in
+# ---------------------------------------------------------------------------
+@never_cache
+@staff_required
+@require_safe
+def door(request):
+    last = checkin_selector.checkin_or_none(request.GET.get("last"))
+    context = {
+        "last": last,
+        "last_membership": membership_selector.current_membership(last.member) if last else None,
+        "last_booking": booking_selector.tonight_for_member(last.member) if last else None,
+        "tonight": checkin_selector.tonight(),
+        "section": "door",
+    }
+    return render(request, "dashboard/door.html", context)
+
+
+@staff_required
+@require_POST
+def door_scan(request):
+    try:
+        result = checkin_service.check_in_with_card(request.POST.get("token", ""), request.user)
+    except checkin_service.CheckInError as exc:
+        messages.error(request, str(exc))
+        return redirect("dashboard:door")
+    checkin = result.checkin
+    if result.created:
+        messages.success(
+            request,
+            _("%(name)s checked in. %(keys)d keys awarded.")
+            % {"name": checkin.member.full_name, "keys": checkin.keys_awarded},
+        )
+    else:
+        messages.warning(
+            request,
+            _("%(name)s already checked in tonight at %(time)s. No keys awarded.")
+            % {"name": checkin.member.full_name, "time": date_format(localtime(checkin.created_at), "H:i")},
+        )
+    return redirect(f"{reverse('dashboard:door')}?last={checkin.pk}")
+
+
+# ---------------------------------------------------------------------------
+# VIP Chamber bookings
+# ---------------------------------------------------------------------------
+@never_cache
+@staff_required
+@require_safe
+def bookings(request):
+    query = request.GET.get("q", "")
+    context = {
+        "query": query,
+        "results": booking_selector.search(query),
+        "requests": booking_selector.requests_queue(),
+        "confirmed": booking_selector.upcoming_confirmed(),
+        "section": "bookings",
+    }
+    return render(request, "dashboard/bookings.html", context)
+
+
+@staff_required
+@require_POST
+def booking_confirm(request, booking_id):
+    booking = booking_selector.booking_or_404(booking_id)
+    form = StaffConfirmForm(request.POST)
+    note = form.cleaned_data["note"] if form.is_valid() else ""
+    try:
+        booking_service.confirm(booking, request.user, note)
+    except booking_service.BookingError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(request, _("Booking %(ref)s confirmed.") % {"ref": booking.reference})
+    return redirect("dashboard:bookings")
+
+
+@staff_required
+@require_POST
+def booking_decline(request, booking_id):
+    booking = booking_selector.booking_or_404(booking_id)
+    form = StaffDeclineForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, _("Please write a short message for the member."))
+        return redirect("dashboard:bookings")
+    try:
+        booking_service.decline(booking, request.user, form.cleaned_data["note"])
+    except booking_service.BookingError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(request, _("Booking %(ref)s declined.") % {"ref": booking.reference})
+    return redirect("dashboard:bookings")
 
 
 @never_cache

@@ -1,0 +1,23 @@
+{% load i18n %}
+{% if rows %}
+<div class="table-responsive mb-4">
+  <table class="table dash-table align-middle">
+    <thead><tr><th>{% translate "Night" %}</th><th>{% translate "Time" %}</th><th>{% translate "Member" %}</th><th>{% translate "Chamber" %}</th><th class="text-end">{% translate "Guests" %}</th><th>{% translate "Status" %}</th><th>{% translate "Ref" %}</th></tr></thead>
+    <tbody>
+      {% for b in rows %}
+      <tr>
+        <td>{{ b.night|date:"D j M" }}</td>
+        <td>{{ b.time_slot }}</td>
+        <td>{{ b.member.full_name }}<div class="small text-muted-lucid">{{ b.member.display_phone }}</div></td>
+        <td>{{ b.get_area_display }}{% if b.note %}<div class="small text-muted-lucid">{{ b.note }}</div>{% endif %}</td>
+        <td class="text-end">{{ b.guests }}</td>
+        <td><span class="status-pill status-{{ b.status }}">{{ b.get_status_display }}</span>{% if b.staff_note %}<div class="small text-muted-lucid">{{ b.staff_note }}</div>{% endif %}</td>
+        <td class="font-monospace">{{ b.reference }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted-lucid mb-4">{{ empty_text }}</p>
+{% endif %}

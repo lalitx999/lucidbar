@@ -1,0 +1,64 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n static %}
+
+{% block title %}{% translate "Door" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<h1 class="font-display fs-4 text-uppercase tracking-wide mt-3 mb-3">{% translate "Door check-in" %}</h1>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <form method="post" action="{% url 'dashboard:door_scan' %}" class="lucid-card h-100 d-flex flex-column gap-3" id="door-form">
+      {% csrf_token %}
+      <div class="eyebrow text-gold">{% translate "Scan the member's identity card" %}</div>
+      <video class="door-camera d-none" id="door-video" muted playsinline></video>
+      <button type="button" class="btn btn-outline-gold d-none" id="door-camera-btn">{% translate "Scan with camera" %}</button>
+      <label class="lucid-label" for="door-token">{% translate "Card code (a handheld scanner types it here)" %}</label>
+      <input type="text" name="token" id="door-token" class="form-control lucid-input font-monospace" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus required>
+      <button type="submit" class="btn btn-lucid">{% translate "Check in" %}</button>
+      <p class="small text-faint mb-0" id="door-camera-hint">{% translate "Cards refresh every minute on the member's phone and expire after five minutes." %}</p>
+    </form>
+  </div>
+
+  <div class="col-md-6">
+    <div class="lucid-card h-100 d-flex flex-column gap-2">
+      <div class="eyebrow text-gold">{% translate "Last scan" %}</div>
+      {% if last %}
+        <div class="fs-5">{{ last.member.full_name }} <span class="small text-gold font-monospace">@{{ last.member.handle }}</span></div>
+        <dl class="identity-facts mb-0">
+          <div><dt>{% translate "Seal" %}</dt><dd>{{ last_membership.tier.name|default:"-" }}</dd></div>
+          <div><dt>{% translate "Checked in" %}</dt><dd>{{ last.created_at|date:"H:i" }}{% if last.created_by %} &middot; {{ last.created_by.full_name }}{% endif %}</dd></div>
+          <div><dt>{% translate "Keys" %}</dt><dd>+{{ last.keys_awarded }}</dd></div>
+          <div><dt>{% translate "Tonight's booking" %}</dt><dd>{% if last_booking %}{{ last_booking.time_slot }} &middot; {{ last_booking.get_area_display }} &middot; {{ last_booking.guests }} &middot; {{ last_booking.get_status_display }}{% else %}-{% endif %}</dd></div>
+        </dl>
+        {% if last_booking.note %}<div class="small text-muted-lucid">{{ last_booking.note }}</div>{% endif %}
+      {% else %}
+        <p class="small text-muted-lucid mb-0">{% translate "Nobody scanned yet." %}</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<h2 class="font-display fs-6 text-uppercase tracking-wide mb-3">{% blocktranslate count n=tonight|length %}Tonight: {{ n }} visit{% plural %}Tonight: {{ n }} visits{% endblocktranslate %}</h2>
+{% if tonight %}
+<div class="table-responsive">
+  <table class="table dash-table align-middle">
+    <thead><tr><th>{% translate "Time" %}</th><th>{% translate "Member" %}</th><th class="text-end">{% translate "Keys" %}</th><th>{% translate "By" %}</th></tr></thead>
+    <tbody>
+      {% for c in tonight %}
+      <tr>
+        <td>{{ c.created_at|date:"H:i" }}</td>
+        <td>{{ c.member.full_name }} <span class="small text-muted-lucid">@{{ c.member.handle }}</span></td>
+        <td class="text-end">{{ c.keys_awarded }}</td>
+        <td>{{ c.created_by.full_name|default:"-" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted-lucid">{% translate "No check-ins yet tonight." %}</p>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/door-scan.js' %}" defer></script>{% endblock %}

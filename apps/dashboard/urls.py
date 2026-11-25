@@ -6,6 +6,11 @@ app_name = "dashboard"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("door/", views.door, name="door"),
+    path("door/scan/", views.door_scan, name="door_scan"),
+    path("bookings/", views.bookings, name="bookings"),
+    path("bookings/<int:booking_id>/confirm/", views.booking_confirm, name="booking_confirm"),
+    path("bookings/<int:booking_id>/decline/", views.booking_decline, name="booking_decline"),
     path("payments/", views.payments, name="payments"),
     path("payments/<str:reference>/", views.payment_detail, name="payment_detail"),
     path("payments/<str:reference>/approve/", views.payment_approve, name="payment_approve"),

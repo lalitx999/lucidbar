@@ -9,6 +9,8 @@
       <img src="{% static 'img/logo-256.png' %}" alt="" class="brand-logo brand-logo-sm" width="32" height="32">
       <span class="font-display">{% translate "Lucid Staff" %}</span>
     </a>
+    <a href="{% url 'dashboard:door' %}" class="{% if section == 'door' %}active{% endif %}">{% translate "Door" %}</a>
+    <a href="{% url 'dashboard:bookings' %}" class="{% if section == 'bookings' %}active{% endif %}">{% translate "Bookings" %}</a>
     <a href="{% url 'dashboard:payments' %}" class="{% if section == 'payments' %}active{% endif %}">{% translate "Payments" %}</a>
     <a href="{% url 'dashboard:redemptions' %}" class="{% if section == 'redemptions' %}active{% endif %}">{% translate "Treasures" %}</a>
     <a href="{% url 'dashboard:reveal' %}" class="{% if section == 'reveal' %}active{% endif %}">{% translate "Reveal" %}</a>

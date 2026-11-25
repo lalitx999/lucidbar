@@ -4,10 +4,8 @@ and SVG rendering.
 """
 
 import re
-from io import BytesIO
 
-import qrcode
-import qrcode.image.svg
+from apps.core import qr
 
 PROMPTPAY_AID = "A000000677010111"
 
@@ -55,13 +53,5 @@ def build_payload(promptpay_id: str, amount_satang: int | None = None) -> str:
 
 
 def render_svg(payload: str) -> str:
-    """Return a standalone <svg> element (no XML declaration) for inline use."""
-    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=2)
-    qr.add_data(payload)
-    qr.make(fit=True)
-    image = qr.make_image(image_factory=qrcode.image.svg.SvgPathImage)
-    buffer = BytesIO()
-    image.save(buffer)
-    svg = buffer.getvalue().decode("utf-8")
-    # Drop the XML declaration so the markup can sit inside HTML.
-    return svg[svg.index("<svg") :]
+    """Kept for callers in this app; the renderer lives in apps.core.qr."""
+    return qr.render_svg(payload)

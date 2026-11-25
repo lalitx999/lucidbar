@@ -13,6 +13,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods, require_POST
 
+from apps.checkin.selectors import checkin_selector
 from apps.core.decorators import member_required
 from apps.memberships.selectors import membership_selector
 
@@ -211,6 +212,7 @@ def identity(request):
         "form": form,
         "active_tab": "identity",
         "membership": membership_selector.current_membership(request.user),
+        "visits": checkin_selector.visit_summary(request.user),
     }
     return render(request, "portal/identity.html", context)
 
